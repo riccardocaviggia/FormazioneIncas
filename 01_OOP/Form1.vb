@@ -16,4 +16,8 @@
             MsgBox(ex.Message, MsgBoxStyle.Critical)
         End Try
     End Sub
+
+    Private Sub Label1_Click(sender As Object, e As EventArgs) Handles lblDay.Click
+
+    End Sub
 End Class

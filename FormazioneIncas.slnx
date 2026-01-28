@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="../02_EuroConverter/02_EuroConverter.vbproj" Id="174ec7c2-c080-48de-af2c-6496a6378f27" />
-  <Project Path="01_WinForms_Date/01_OOP.vbproj" Id="3028c12b-ef38-4e34-9de0-2f7e8e32adcb" />
+  <Project Path="01_OOP/01_OOP.vbproj" Id="3028c12b-ef38-4e34-9de0-2f7e8e32adcb" />
+  <Project Path="02_CurrencyConverter/02_CurrencyConverter.vbproj" Id="cb612fbc-f4f5-480a-85bf-b2fbfef25c05" />
   <Project Path="FormazioneIncas.vbproj" Id="ff0cb402-de10-4018-ab20-d8e2707260cc" />
 </Solution>
