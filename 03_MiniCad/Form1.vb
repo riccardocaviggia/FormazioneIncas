@@ -34,13 +34,13 @@
         Points.PointsSituation()
     End Sub
 
-    Private Sub Form1_MouseClick(sender As Object, e As MouseEventArgs) Handles MyBase.MouseClick
-        If e.Button = MouseButtons.Right Then
+    Private Sub Form1_MouseClick(sender As Object, ev As EventArgs) Handles MyBase.MouseClick
+        If DirectCast(ev, MouseEventArgs).Button = MouseButtons.Right Then
             If cdlgColorSelect.ShowDialog() = DialogResult.OK Then
                 choosenColor = cdlgColorSelect.Color
             End If
         Else
-            Dim p As Points = New Points(e.X, e.Y, choosenColor, CreateGraphics())
+            Dim p As Points = New Points(DirectCast(ev, MouseEventArgs).X, DirectCast(ev, MouseEventArgs).Y, choosenColor, CreateGraphics())
             p.Draw()
         End If
     End Sub

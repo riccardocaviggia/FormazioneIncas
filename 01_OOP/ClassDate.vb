@@ -1,16 +1,41 @@
 ﻿Public Class ClassDate
-    Public Property day As Integer
-    Public Property month As Integer
-    Public Property year As Integer
 
+    Private _day As Integer
+    Private _month As Integer
+    Private _year As Integer
+
+    Public Property day As Integer
+        Set(value As Integer)
+            _day = value
+        End Set
+        Get
+            Return _day
+        End Get
+    End Property
+    Public Property month As Integer
+        Set(value As Integer)
+            _month = value
+        End Set
+        Get
+            Return _month
+        End Get
+    End Property
+    Public Property year As Integer
+        Set(value As Integer)
+            _year = value
+        End Set
+        Get
+            Return _year
+        End Get
+    End Property
     Public Sub New(d As Integer, m As Integer, y As Integer)
         If Not DateCheck(d, m, y) Then
             Throw New ArgumentException("Invalid date")
         End If
 
-        day = d
-        month = m
-        year = y
+        _day = d
+        _month = m
+        _year = y
     End Sub
 
     Public Sub New(d As Integer, m As Integer)
@@ -35,4 +60,5 @@
         End Select
         Return d <= daysInMonth
     End Function
+
 End Class
