@@ -1,28 +1,27 @@
-﻿Imports ClassLibrary
-Module Module1
+﻿Module Module1
 
     Sub Main(ByVal args() As String)
         If args.Length <> 1 Then
             Console.WriteLine("Error: Provide only the configuration path as argument.")
-            Return
         End If
 
         Dim connString As String = args(0)
-        Dim _crud = New SqlCrudManager(connString)
-        Dim dt As DataTable = _crud.ReadMethod("SELECT ProductID, ProductName, UnitPrice, CategoryID FROM Products")
+        Dim products As List(Of Product)
 
-        Dim products As New List(Of Product)
-        For Each row As DataRow In dt.Rows
-            products.Add(New Product With {
-                .ProductID = CInt(row("ProductID")),
-                .ProductName = row("ProductName").ToString(),
-                .UnitPrice = CDec(row("UnitPrice")),
-                .CategoryID = CInt(row("CategoryID"))
-            })
-        Next
+        Using db As New Context(connString)
+            Try
+                products = db.Products.ToList()
+            Catch ex As Exception
+                Console.WriteLine("Error EF: " & ex.Message)
+                Console.WriteLine(vbCrLf & "Press something to exit")
+                Console.ReadKey()
+            End Try
+        End Using
 
         Console.WriteLine("--- LIST OF PRODUCTS ---")
-        products.ForEach(Sub(p) Console.WriteLine(p.ToString()))
+        For Each p In products
+            Console.WriteLine(p.ToString())
+        Next
 
         Console.WriteLine(vbCrLf & "--- LIST OF PRODUCTS (SORTED)")
         Dim sorted = products.OrderBy(Function(p) p.ProductName)

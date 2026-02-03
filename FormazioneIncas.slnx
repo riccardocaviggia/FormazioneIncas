@@ -4,6 +4,7 @@
   <Project Path="03_MiniCad/03_MiniCad.vbproj" Id="7abb0fa1-32eb-437b-be73-74c6adf49437" />
   <Project Path="3_DbAccess/3_DbAccess.vbproj" Id="b235f97a-1804-4bb9-b512-c1f574754dd8" />
   <Project Path="4_LINQ/4_LINQ.vbproj" Id="52e696de-028c-4ca9-9b95-46efa19b1b51" />
+  <Project Path="5_EntityFramework/5_EntityFramework.vbproj" Id="b42350be-fb84-4c0d-b833-dd292fab788b" />
   <Project Path="ClassLibrary/ClassLibrary.vbproj" Id="c5864349-32f8-42b2-9a30-89117241f122" />
   <Project Path="dbConnectionTest/dbConnectionTest.vbproj" Id="5b657187-b6b4-404a-89cd-c3a7f179211b" />
   <Project Path="FormazioneIncas.vbproj" Id="ff0cb402-de10-4018-ab20-d8e2707260cc" />
