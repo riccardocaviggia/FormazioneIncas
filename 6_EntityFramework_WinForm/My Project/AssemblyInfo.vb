@@ -8,17 +8,17 @@ Imports System.Runtime.InteropServices
 
 ' Controllare i valori degli attributi degli assembly
 
-<Assembly: AssemblyTitle("FormazioneIncas")>
+<Assembly: AssemblyTitle("6_EntityFramework_WinForm")>
 <Assembly: AssemblyDescription("")>
 <Assembly: AssemblyCompany("")>
-<Assembly: AssemblyProduct("FormazioneIncas")>
+<Assembly: AssemblyProduct("6_EntityFramework_WinForm")>
 <Assembly: AssemblyCopyright("Copyright ©  2026")>
 <Assembly: AssemblyTrademark("")>
 
 <Assembly: ComVisible(False)>
 
 'Se il progetto viene esposto a COM, il GUID seguente verrà usato come ID del typelib
-<Assembly: Guid("ca2322b8-9bd5-49b9-a8e7-688c2a559612")>
+<Assembly: Guid("695e253c-07e7-451c-816a-31b32aff0009")>
 
 ' Le informazioni sulla versione di un assembly sono costituite dai seguenti quattro valori:
 '

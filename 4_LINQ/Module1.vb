@@ -52,7 +52,7 @@ Module Module1
         End If
 
         Console.WriteLine(vbCrLf & "--- PRODUCTS GROUPED BY CATEGORY")
-        Dim pGrouped = products.GroupBy(Function(p) p.CategoryID)
+        Dim pGrouped = products.OrderBy(Function(b) b.CategoryID).GroupBy(Function(p) p.CategoryID)
         For Each p In pGrouped : Console.WriteLine($"Category: {p.Key} | Contains {p.Count} products") : Next
 
         Console.WriteLine(vbCrLf & "Press something to exit")
