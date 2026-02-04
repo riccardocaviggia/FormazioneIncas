@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/Queries/">
-    <File Path="../../../Documents/SQL Server Management Studio 22/Ex.15.sql" />
+    <File Path="Queries/Ex.15.sql" />
   </Folder>
   <Project Path="2_DbConnection/2_DbConnection.vbproj" Id="5b657187-b6b4-404a-89cd-c3a7f179211b" />
   <Project Path="3_DbAccess/3_DbAccess.vbproj" Id="b235f97a-1804-4bb9-b512-c1f574754dd8" />
