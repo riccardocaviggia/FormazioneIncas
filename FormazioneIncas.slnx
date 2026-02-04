@@ -1,11 +1,11 @@
 <Solution>
-  <Project Path="01_OOP/OOP_example.vbproj" Id="3028c12b-ef38-4e34-9de0-2f7e8e32adcb" />
-  <Project Path="02_CurrencyConverter/CurrencyConverter_example.vbproj" Id="cb612fbc-f4f5-480a-85bf-b2fbfef25c05" />
-  <Project Path="03_MiniCad/MiniCad_example.vbproj" Id="7abb0fa1-32eb-437b-be73-74c6adf49437" />
+  <Project Path="2_DbConnection/2_DbConnection.vbproj" Id="5b657187-b6b4-404a-89cd-c3a7f179211b" />
   <Project Path="3_DbAccess/3_DbAccess.vbproj" Id="b235f97a-1804-4bb9-b512-c1f574754dd8" />
   <Project Path="4_LINQ/4_LINQ.vbproj" Id="52e696de-028c-4ca9-9b95-46efa19b1b51" />
   <Project Path="5_EntityFramework/5_EntityFramework.vbproj" Id="b42350be-fb84-4c0d-b833-dd292fab788b" />
   <Project Path="6_EntityFramework_WinForm/6_EntityFramework_WinForm.vbproj" Id="a6a97ceb-31dc-4454-bde1-b483536cc882" />
   <Project Path="ClassLibrary/ClassLibrary.vbproj" Id="c5864349-32f8-42b2-9a30-89117241f122" />
-  <Project Path="dbConnectionTest/2_DbConnection.vbproj" Id="5b657187-b6b4-404a-89cd-c3a7f179211b" />
+  <Project Path="CurrencyConverter_example/CurrencyConverter_example.vbproj" Id="cb612fbc-f4f5-480a-85bf-b2fbfef25c05" />
+  <Project Path="MiniCad_example/MiniCad_example.vbproj" Id="7abb0fa1-32eb-437b-be73-74c6adf49437" />
+  <Project Path="OOP_example/OOP_example.vbproj" Id="3028c12b-ef38-4e34-9de0-2f7e8e32adcb" />
 </Solution>
