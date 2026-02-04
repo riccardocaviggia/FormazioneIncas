@@ -42,9 +42,9 @@
     End Sub
 
     Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
-        If dgvProducts.CurrentRow Is Nothing Then Return
+        Dim id As Integer
 
-        Dim id As Integer = CInt(dgvProducts.CurrentRow.Cells("ProductID").Value)
+        If Not TryGetSelectedId(id) Then Return
 
         Try
             Dim modifiedP = _db.Products.Find(id)
@@ -60,8 +60,29 @@
     End Sub
 
     Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
-        If dgvProducts.CurrentRow Is Nothing Then Return
-
         Dim id As Integer
+
+        If Not TryGetSelectedId(id) Then Return
+
+        Try
+            Dim deleteP = _db.Products.Find(id)
+            If deleteP IsNot Nothing Then
+                _db.Products.Remove(deleteP)
+                _db.SaveChanges()
+                AddData()
+            End If
+        Catch ex As Exception
+            MsgBox("Error: " & ex.Message)
+        End Try
     End Sub
+
+    Private Function TryGetSelectedId(ByRef id As Integer) As Boolean
+        If dgvProducts.CurrentRow Is Nothing Then
+            MsgBox("Please select a row.")
+            Return False
+        End If
+
+        id = CInt(dgvProducts.CurrentRow.Cells("ProductId").Value)
+        Return True
+    End Function
 End Class
