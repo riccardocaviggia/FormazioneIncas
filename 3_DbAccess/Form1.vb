@@ -32,70 +32,54 @@ Public Class Form1
     End Sub
 
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
-        Try
-            Dim sql As String = "INSERT INTO Products (ProductName, SupplierID, CategoryID, QuantityPerUnit, UnitPrice, UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued) VALUES ('Prodotto test', 1, 1, 15, 0, 10, 0, 0, 0)"
-            Dim queries As New List(Of String)
-            queries.Add(sql)
-            Logger.Log("Attempting to add new product.")
-            If _crud.ExecuteTransaction(queries) Then
-                Logger.Log("New product added successfully.")
-                MsgBox("Product added successfully.")
-                LoadData()
-            End If
-        Catch ex As NorthwindTransactionException
-            Logger.Log("Transaction error while adding product: " & ex.Message)
-            MsgBox("Transaction error: " & ex.Message)
-        Catch ex As Exception
-            Logger.Log("An error occurred: " & ex.Message)
-            MsgBox("Error: " & ex.Message)
-        End Try
+        Dim sql As String = "INSERT INTO Products (ProductName, SupplierID, CategoryID, QuantityPerUnit, UnitPrice, UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued) VALUES ('Prodotto test', 1, 1, 15, 0, 10, 0, 0, 0)"
+        ExecuteSqlTransaction(sql, "Attempting to add new product.", "Product added successfully.")
     End Sub
 
     Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
-        If dgvProducts.CurrentRow Is Nothing Then
-            MsgBox("Please select a product to update.")
-            Return
-        End If
+        Dim id As Integer
+        If Not TryGetSelectedProductId(id) Then Return
 
-        Dim id As Integer = CInt(dgvProducts.CurrentRow.Cells("ProductID").Value)
-
-        Try
-            Logger.Log("Attempting to update product with ID: " & id)
-            Dim sql As String = $"UPDATE Products SET ProductName = 'Product updated' WHERE ProductID = {id}"
-            Dim queries As New List(Of String)
-            queries.Add(sql)
-            Logger.Log("Executing update transaction.")
-            _crud.ExecuteTransaction(queries)
-            Logger.Log("Product updated successfully.")
-            LoadData()
-            MsgBox("Product updated successfully.")
-        Catch ex As NorthwindTransactionException
-            Logger.Log("UPDATE failed: " & ex.Message)
-            MsgBox("Transaction error: " & ex.Message)
-        End Try
+        Dim sql As String = $"UPDATE Products SET ProductName = 'Product updated' WHERE ProductID = {id}"
+        ExecuteSqlTransaction(sql, "Attempting to update a product", "Product updated successfully")
     End Sub
 
     Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
+        Dim id As Integer
+        If Not TryGetSelectedProductId(id) Then Return
+
+        Dim sql = $"DELETE FROM Products WHERE ProductID = {id}"
+        ExecuteSqlTransaction(sql, "Attempting to delete a product", "Product deleted successfully")
+    End Sub
+
+    Private Function TryGetSelectedProductId(ByRef id As Integer) As Boolean
         If dgvProducts.CurrentRow Is Nothing Then
-            MsgBox("Please select a product to delete.")
-            Return
+            MsgBox("Please select a product to continue.")
+            Return False
         End If
 
-        Dim id As Integer = CInt(dgvProducts.CurrentRow.Cells("ProductID").Value)
+        id = CInt(dgvProducts.CurrentRow.Cells("ProductId").Value)
+        Return True
+    End Function
 
+    Private Sub ExecuteSqlTransaction(sql As String, actionLog As String, successMsg As String)
         Try
-            Logger.Log("Attempting to delete product with ID: " & id)
-            Dim sql As String = $"DELETE FROM Products WHERE ProductID = {id}"
-            Dim queries As New List(Of String)
-            queries.Add(sql)
-            Logger.Log("Executing delete transaction.")
-            _crud.ExecuteTransaction(queries)
-            Logger.Log("Product deleted successfully.")
-            LoadData()
-            MsgBox("Product deleted successfully.")
+            Dim queries As New List(Of String) From {sql}
+            Logger.Log(actionLog)
+            Dim executed As Boolean = _crud.ExecuteTransaction(queries)
+
+            If executed Then
+                Logger.Log(successMsg)
+                LoadData()
+            Else
+                Logger.Log("Transaction executed but returned False for SQL: " & sql)
+            End If
         Catch ex As NorthwindTransactionException
-            Logger.Log("DELETE failed: " & ex.Message)
+            Logger.Log("Transaction error: " & ex.Message)
             MsgBox("Transaction error: " & ex.Message)
+        Catch ex As Exception
+            Logger.Log("An error occurred: " & ex.Message)
+            MsgBox("An error occurred: " & ex.Message)
         End Try
     End Sub
 End Class
