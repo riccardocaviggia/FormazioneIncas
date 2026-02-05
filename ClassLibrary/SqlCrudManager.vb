@@ -15,7 +15,7 @@ Public Class SqlCrudManager
             Try
                 For Each query In queries
                     Dim cmd As New SqlCommand(query, conn, transaction)
-                    cmd.ExecuteNonQuery()
+                    Dim iRowAffected As Integer = cmd.ExecuteNonQuery()
                 Next
                 transaction.Commit()
                 Return True
