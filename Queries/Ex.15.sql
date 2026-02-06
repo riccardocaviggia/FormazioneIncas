@@ -30,7 +30,8 @@ alter table Customers add constraint UQ_CompanyName UNIQUE (CompanyName)
 
 -- Crea una vista che unisce gli ordini con i relativi nomi dei clienti.
 go
-create view V_GetRelationClientOrders as select o.OrderID, c.CompanyName, o.OrderDate, o.ShipCity from Orders o join Customers c on o.CustomerID = c.CustomerID
+create view V_GetRelationClientOrders as 
+select o.OrderID, c.CompanyName, o.OrderDate, o.ShipCity from Orders o join Customers c on o.CustomerID = c.CustomerID
 go
 select * from V_GetRelationClientOrders
 go
@@ -43,7 +44,7 @@ select * from Orders where CustomerID = @CustomerID
 end;
 go
 
-exec GetClientOrders @CustomerID = 
+exec GetClientOrders @CustomerID = 'BOLID'
 
 
 -- Crea una funzione che calcoli uno sconto del 10% su un importo superiore a 100.
@@ -77,3 +78,5 @@ begin
 	insert into OrdersLog(OrderID)
 	select OrderID from inserted
 end;
+
+set nocount 
