@@ -1,3 +1,4 @@
+use LibraryDB
 select u.UserName, u.UserSurname
 from Users u
 join BookLoans bl on u.UserID = bl.UserID
