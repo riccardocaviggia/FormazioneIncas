@@ -33,7 +33,7 @@ create table Orders (
 	OrderID int identity not null,
 	ClientID int not null,
 	OrderDate datetime default current_timestamp,
-	OrderStatus varchar(20) default 'in elaborazione',
+	OrderStatus varchar(50) not null check (OrderStatus in('In elaborazione', 'Spedito', 'Consegnato')),
 	OrderPayment varchar(20),
 
 	constraint PK_Orders_OrderID primary key(OrderID),
