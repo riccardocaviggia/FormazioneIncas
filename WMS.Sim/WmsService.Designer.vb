@@ -1,5 +1,5 @@
 ﻿Imports System.ServiceProcess
-Imports SimCommon
+Imports CommonSim
 
 <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class WmsService
