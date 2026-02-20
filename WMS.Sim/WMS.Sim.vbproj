@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{9BDA4F8D-8EE6-4B72-959B-1C10B2ACE5A4}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <StartupObject>WMS.Sim.Service1</StartupObject>
+    <StartupObject>WMS.Sim.WmsService</StartupObject>
     <RootNamespace>WMS.Sim</RootNamespace>
     <AssemblyName>WMS.Sim</AssemblyName>
     <FileAlignment>512</FileAlignment>
@@ -74,11 +74,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
     </Compile>
-    <Compile Include="Service1.vb">
+    <Compile Include="WmsService.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Service1.Designer.vb">
-      <DependentUpon>Service1.vb</DependentUpon>
+    <Compile Include="WmsService.Designer.vb">
+      <DependentUpon>WmsService.vb</DependentUpon>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Resources.Designer.vb">
@@ -111,6 +111,12 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common.Sim\Common.Sim.vbproj">
+      <Project>{640151c0-b040-479e-90d9-fa7536b15f9b}</Project>
+      <Name>Common.Sim</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

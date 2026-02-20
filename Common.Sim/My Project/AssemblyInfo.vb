@@ -8,17 +8,17 @@ Imports System.Runtime.InteropServices
 
 ' Controllare i valori degli attributi degli assembly
 
-<Assembly: AssemblyTitle("HOST.Sim")>
+<Assembly: AssemblyTitle("Common.Sim")>
 <Assembly: AssemblyDescription("")>
 <Assembly: AssemblyCompany("")>
-<Assembly: AssemblyProduct("HOST.Sim")>
+<Assembly: AssemblyProduct("Common.Sim")>
 <Assembly: AssemblyCopyright("Copyright ©  2026")>
 <Assembly: AssemblyTrademark("")>
 
 <Assembly: ComVisible(False)>
 
 'Se il progetto viene esposto a COM, il GUID seguente verrà usato come ID del typelib
-<Assembly: Guid("fd2ec67f-36ef-40e1-8790-589992bbe19a")>
+<Assembly: Guid("74bf5a57-343e-4f10-b6c1-02b01400d660")>
 
 ' Le informazioni sulla versione di un assembly sono costituite dai seguenti quattro valori:
 '

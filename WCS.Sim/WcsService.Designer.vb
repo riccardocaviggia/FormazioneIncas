@@ -1,7 +1,8 @@
 ﻿Imports System.ServiceProcess
+Imports SimCommon
 
 <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
-Partial Class Service1
+Partial Class WcsService
     Inherits System.ServiceProcess.ServiceBase
 
     'UserService esegue l'override del metodo Dispose per pulire l'elenco dei componenti.
@@ -20,17 +21,7 @@ Partial Class Service1
     <MTAThread()> _
     <System.Diagnostics.DebuggerNonUserCode()> _
     Shared Sub Main()
-        Dim ServicesToRun() As System.ServiceProcess.ServiceBase
-
-        ' All'interno di uno stesso processo è possibile eseguire più servizi di Windows NT.
-        ' Per aggiungere un servizio al processo, modificare la riga che segue in modo
-        ' da creare un secondo oggetto servizio. Ad esempio,
-        '
-        '   ServicesToRun = New System.ServiceProcess.ServiceBase () {New Service1, New MySecondUserService}
-        '
-        ServicesToRun = New System.ServiceProcess.ServiceBase() {New Service1}
-
-        System.ServiceProcess.ServiceBase.Run(ServicesToRun)
+        ServiceHelper.RunService(New WcsService())
     End Sub
 
     'Richiesto da Progettazione componenti
@@ -42,7 +33,7 @@ Partial Class Service1
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         components = New System.ComponentModel.Container()
-        Me.ServiceName = "Service1"
+        Me.ServiceName = "WcsService"
     End Sub
 
 End Class

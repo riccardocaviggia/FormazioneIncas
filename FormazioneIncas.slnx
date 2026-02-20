@@ -3,7 +3,8 @@
     <File Path="Queries/Ex.15.sql" />
   </Folder>
   <Folder Name="/WareHouseServices/">
-    <Project Path="HOST.Sim/HOST.Sim.vbproj" Id="7e9722b0-a2c4-4fd8-b024-b74c3bb263e6" />
+    <Project Path="Common.Sim/Common.Sim.vbproj" Id="640151c0-b040-479e-90d9-fa7536b15f9b" />
+    <Project Path="HOST.Sim/HOST.Sim.vbproj" Id="0d98f562-73ca-45d0-b0d7-7276c12725b4" />
     <Project Path="PLC.Sim/PLC.Sim.vbproj" Id="12b3fb70-0ca3-44de-97ff-d4534beafc9e" />
     <Project Path="WCS.Sim/WCS.Sim.vbproj" Id="79f40c90-5ae4-4f1b-8f26-bbc4feee716e" />
     <Project Path="WMS.Sim/WMS.Sim.vbproj" Id="9bda4f8d-8ee6-4b72-959b-1c10b2ace5a4" />

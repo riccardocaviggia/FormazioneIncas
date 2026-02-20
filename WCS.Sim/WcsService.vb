@@ -1,4 +1,4 @@
-﻿Public Class Service1
+﻿Public Class WcsService
 
     Protected Overrides Sub OnStart(ByVal args() As String)
         ' Inserire qui il codice necessario per avviare il proprio servizio. Il metodo deve effettuare
