@@ -2,6 +2,12 @@
   <Folder Name="/Queries/">
     <File Path="Queries/Ex.15.sql" />
   </Folder>
+  <Folder Name="/WareHouseServices/">
+    <Project Path="HOST.Sim/HOST.Sim.vbproj" Id="7e9722b0-a2c4-4fd8-b024-b74c3bb263e6" />
+    <Project Path="PLC.Sim/PLC.Sim.vbproj" Id="12b3fb70-0ca3-44de-97ff-d4534beafc9e" />
+    <Project Path="WCS.Sim/WCS.Sim.vbproj" Id="79f40c90-5ae4-4f1b-8f26-bbc4feee716e" />
+    <Project Path="WMS.Sim/WMS.Sim.vbproj" Id="9bda4f8d-8ee6-4b72-959b-1c10b2ace5a4" />
+  </Folder>
   <Project Path="18_Library_EF/18_Library_EF.vbproj" Id="b0dfb600-1c03-4c6a-ad0a-3bc958639c55" />
   <Project Path="2_DbConnection/2_DbConnection.vbproj" Id="5b657187-b6b4-404a-89cd-c3a7f179211b" />
   <Project Path="3_DbAccess/3_DbAccess.vbproj" Id="b235f97a-1804-4bb9-b512-c1f574754dd8" />
