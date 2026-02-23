@@ -74,7 +74,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
     </Compile>
-    <Compile Include="HostService.vb" />
+    <Compile Include="HostService.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="HostService.Designer.vb">
       <DependentUpon>HostService.vb</DependentUpon>
     </Compile>

@@ -1,8 +1,10 @@
-﻿Public Class PlcService
+﻿Imports System.Data.SqlClient
+Imports CommonSim
+
+Public Class PlcService
 
     Protected Overrides Sub OnStart(ByVal args() As String)
-        ' Inserire qui il codice necessario per avviare il proprio servizio. Il metodo deve effettuare
-        ' le impostazioni necessarie per il funzionamento del servizio.
+        Dim cs As String = ConnectionStringProvider.GetConnectionString(args)
     End Sub
 
     Protected Overrides Sub OnStop()
