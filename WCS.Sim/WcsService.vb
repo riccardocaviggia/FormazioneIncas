@@ -1,13 +1,24 @@
 ﻿Imports CommonSim
+Imports System.ServiceProcess
 
 Public Class WcsService
+    Inherits ServiceBase
+
+    Private _server As WcsTcpServer
 
     Protected Overrides Sub OnStart(ByVal args() As String)
-        Dim cs As String = ConnectionStringProvider.GetConnectionString(args)
+        Dim port As Integer = TcpConfig.GetTcpPort()
+
+        _server = New WcsTcpServer(port, Sub(m) Console.WriteLine("[WcsService] " & m))
+
+        _server.Start()
     End Sub
 
     Protected Overrides Sub OnStop()
-        ' Inserire qui il codice delle procedure di chiusura necessarie per arrestare il proprio servizio.
+        If _server IsNot Nothing Then
+            _server.Stop()
+            _server = Nothing
+        End If
     End Sub
 
 End Class
