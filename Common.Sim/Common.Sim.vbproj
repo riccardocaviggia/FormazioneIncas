@@ -67,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConnectionStringProvider.vb" />
+    <Compile Include="ContextRecord.vb" />
     <Compile Include="DbHelper.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">

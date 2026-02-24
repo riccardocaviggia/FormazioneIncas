@@ -1,7 +1,7 @@
 ﻿Imports System.Data.SqlClient
 Imports System.Runtime.InteropServices
 
-Module DbHelper
+Public Module DbHelper
     Public Function ExecuteReader(Of T)(
         connectionString As String,
         sql As String,

@@ -12,11 +12,13 @@ Public Class WcsTcpServer
     Private _listener As TcpListener
     Private _acceptThread As Thread ' Thread per l'accettazione di nuovi client
     Private _cts As CancellationTokenSource ' Token per la cancellazione dei thread
+    Private ReadOnly _contexts As Dictionary(Of String, Boolean)
 
-    Public Sub New(port As Integer, Optional log As Action(Of String) = Nothing)
+    Public Sub New(port As Integer, contexts As Dictionary(Of String, Boolean), Optional log As Action(Of String) = Nothing)
         _port = port
         _log = If(log, Sub(msg)
                        End Sub)
+        _contexts = contexts
     End Sub
 
     Public Sub Start()
@@ -143,21 +145,26 @@ Public Class WcsTcpServer
         End Using
     End Sub
 
-    Private Shared Function GetResultByContextCode(contextCode As String) As Integer
-        If String.IsNullOrEmpty(contextCode) Then Return 0
+    Private Function GetResultByContextCode(contextCode As String) As Integer
+        If String.IsNullOrEmpty(contextCode) Then
+            _log("WARNING: contextCode is null or empty, returning result 0")
+            Return 0
+        End If
 
-        Select Case contextCode.ToUpperInvariant()
-            Case "INBOUND"
-                Return 1
-            Case "OUTBOUND"
-                Return 1
-            Case "INVENTORY"
-                Return 1
-            Case "ERRORSIM"
-                Return 1
-            Case Else
-                Return 0
-        End Select
+        Dim key = contextCode.ToUpperInvariant()
+        Dim isEnabled As Boolean
+
+        If Not _contexts.TryGetValue(key, isEnabled) Then
+            _log("WARNING: contextCode '" & contextCode & "' not found in cache, returning result 0")
+            Return 0
+        End If
+
+        If Not isEnabled Then
+            _log("WARNING: contextCode '" & contextCode & "' is disabled, returning result=0")
+            Return 0
+        End If
+
+        Return 1
     End Function
 
     Public Class WcsMessage
@@ -167,8 +174,14 @@ Public Class WcsTcpServer
         <JsonPropertyName("type")>
         Public Property Type As String
 
+        <JsonPropertyName("value")>
+        Public Property Value As String
+
         <JsonPropertyName("contextCode")>
         Public Property ContextCode As String
+
+        <JsonPropertyName("ts")>
+        Public Property Ts As String
     End Class
 
     Public Class AckMessage
