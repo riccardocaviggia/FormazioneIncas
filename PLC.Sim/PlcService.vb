@@ -1,4 +1,5 @@
-﻿Imports System.ServiceProcess
+﻿Imports System.IO
+Imports System.ServiceProcess
 Imports CommonSim
 
 Public Class PlcService
@@ -13,11 +14,16 @@ Public Class PlcService
         _client = New PlcTcpClient(host, port)
         _client.ConnectOrThrow()
 
-        Dim msg As String = "{""type"":""hello"",""from"":""PLC""}"
-        Dim ack As String = _client.SendAndWaitAck(msg)
-
-        Console.WriteLine("[PLC] sent: " & msg)
-        Console.WriteLine("[PLC] received ack: " & ack)
+        Try
+            Dim msg As String = "{""type"":""hello"",""from"":""PLC""}"
+            Dim ack As String = _client.SendAndWaitAck(msg)
+            Console.WriteLine("[PLC] sent " & msg)
+            Console.WriteLine("[PLC] received ack: " & ack)
+        Catch ex As IOException
+            Console.WriteLine("[PLC] Communication error: " & ex.ToString())
+        Catch ex As TimeoutException
+            Console.WriteLine("[PLC] Server timeout")
+        End Try
     End Sub
 
     Protected Overrides Sub OnStop()

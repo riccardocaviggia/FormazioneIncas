@@ -76,7 +76,7 @@ Public Class WcsTcpServer
     Private Sub AcceptLoop(ct As CancellationToken) 'ogni client viene gestito in un thread separato, il loop continua ad accettare nuovi client finché non viene richiesto di fermarsi
         While Not ct.IsCancellationRequested
             Try
-                Dim client As TcpClient = _listener.AcceptTcpClient()
+                Dim client As TcpClient = _listener.AcceptTcpClient() ' L'esecuzione si blocca qui finché non arriva un nuovo client o il listener viene chiuso
                 _log("Client connected")
 
                 Dim t As New Thread(Sub() HandleClient(client, ct)) With {.IsBackground = True, .Name = "WcsTcpServer.HandleClient"}
