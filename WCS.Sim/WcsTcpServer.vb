@@ -122,7 +122,8 @@ Public Class WcsTcpServer
                                 _log("Received from client: " & line)
                                 Try
                                     Dim msg = JsonSerializer.Deserialize(Of WcsMessage)(line, _jsonOptions)
-                                    Dim ack = JsonSerializer.Serialize(New AckMessage With {.Id = msg?.Id}, _jsonOptions)
+                                    Dim result As Integer = GetResultByContextCode(msg?.ContextCode)
+                                    Dim ack = JsonSerializer.Serialize(New AckMessage With {.Id = msg?.Id, .Result = result}, _jsonOptions)
                                     writer.WriteLine(ack)
                                     _log("Sent to client: " & ack)
                                 Catch ex As JsonException
@@ -142,12 +143,32 @@ Public Class WcsTcpServer
         End Using
     End Sub
 
+    Private Shared Function GetResultByContextCode(contextCode As String) As Integer
+        If String.IsNullOrEmpty(contextCode) Then Return 0
+
+        Select Case contextCode.ToUpperInvariant()
+            Case "INBOUND"
+                Return 1
+            Case "OUTBOUND"
+                Return 1
+            Case "INVENTORY"
+                Return 1
+            Case "ERRORSIM"
+                Return 1
+            Case Else
+                Return 0
+        End Select
+    End Function
+
     Public Class WcsMessage
         <JsonPropertyName("id")>
         Public Property Id As String
 
         <JsonPropertyName("type")>
         Public Property Type As String
+
+        <JsonPropertyName("contextCode")>
+        Public Property ContextCode As String
     End Class
 
     Public Class AckMessage
@@ -160,6 +181,9 @@ Public Class WcsTcpServer
         <JsonPropertyName("id")>
         <JsonIgnore(Condition:=JsonIgnoreCondition.WhenWritingNull)>
         Public Property Id As String
+
+        <JsonPropertyName("result")>
+        Public Property Result As String
     End Class
 
     Private Shared ReadOnly _jsonOptions As New JsonSerializerOptions() With {

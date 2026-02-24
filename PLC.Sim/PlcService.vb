@@ -10,6 +10,7 @@ Public Class PlcService
     Private _timer As Timer
     Private _seq As Integer = 0 ' contatore per generare codici a barre univoci
     Private ReadOnly _sendLock As New Object()
+    Private ReadOnly _contexts As String() = {"INBOUND", "OUTBOUND", "INVENTORY", "ERRORSIM"}
 
     Protected Overrides Sub OnStart(ByVal args() As String)
         Dim host As String = TcpConfig.GetTcpHost()
@@ -29,7 +30,8 @@ Public Class PlcService
             _seq += 1
             Dim barcodeValue As String = "BC" & _seq.ToString("00000000")
             Dim id As String = Guid.NewGuid().ToString("N")
-            Dim msq As String = "{""type"":""barcode"",""id"":""" & id & """,""value"":""" & barcodeValue & """,""ts"":""" & DateTime.UtcNow.ToString("o") & """}"
+            Dim contextCode As String = _contexts((_seq - 1) Mod _contexts.Length)
+            Dim msq As String = "{""type"":""barcode"",""id"":""" & id & """,""value"":""" & barcodeValue & """, " & """contextCode"":""" & contextCode & """," & """ts"":""" & DateTime.UtcNow.ToString("o") & """}"
             Dim ack As String = _client.SendAndWaitAck(msq)
 
             Console.WriteLine("[PLC] Sent: " & msq)
