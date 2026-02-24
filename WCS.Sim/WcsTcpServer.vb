@@ -2,6 +2,8 @@
 Imports System.Net
 Imports System.Net.Sockets
 Imports System.Text
+Imports System.Text.Json
+Imports System.Text.Json.Serialization
 Imports System.Threading
 
 Public Class WcsTcpServer
@@ -118,16 +120,16 @@ Public Class WcsTcpServer
                                 If line.Length = 0 Then Continue While
 
                                 _log("Received from client: " & line)
-                                Dim ack As String = "{""type"":""ack"",""ok"":true}"
-
                                 Try
+                                    Dim msg = JsonSerializer.Deserialize(Of WcsMessage)(line, _jsonOptions)
+                                    Dim ack = JsonSerializer.Serialize(New AckMessage With {.Id = msg?.Id}, _jsonOptions)
                                     writer.WriteLine(ack)
                                     _log("Sent to client: " & ack)
-                                Catch ex As IOException
-                                    _log("Client write IO error: " & ex.Message())
+                                Catch ex As JsonException
+                                    _log("Invalid JSON from client: " & ex.Message())
                                     Exit While
-                                Catch ex As Exception
-                                    _log("Client write unexpected error: " & ex.ToString())
+                                Catch ex As IOException
+                                    _log("Client write IO error: " & ex.Message)
                                     Exit While
                                 End Try
                             End While
@@ -139,4 +141,29 @@ Public Class WcsTcpServer
             End Try
         End Using
     End Sub
+
+    Public Class WcsMessage
+        <JsonPropertyName("id")>
+        Public Property Id As String
+
+        <JsonPropertyName("type")>
+        Public Property Type As String
+    End Class
+
+    Public Class AckMessage
+        <JsonPropertyName("type")>
+        Public Property Type As String = "ack"
+
+        <JsonPropertyName("ok")>
+        Public Property Ok As Boolean = True
+
+        <JsonPropertyName("id")>
+        <JsonIgnore(Condition:=JsonIgnoreCondition.WhenWritingNull)>
+        Public Property Id As String
+    End Class
+
+    Private Shared ReadOnly _jsonOptions As New JsonSerializerOptions() With {
+        .PropertyNameCaseInsensitive = True
+    }
+
 End Class
