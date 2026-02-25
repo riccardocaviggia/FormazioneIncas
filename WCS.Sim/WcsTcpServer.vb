@@ -12,13 +12,11 @@ Public Class WcsTcpServer
     Private _listener As TcpListener
     Private _acceptThread As Thread ' Thread per l'accettazione di nuovi client
     Private _cts As CancellationTokenSource ' Token per la cancellazione dei thread
-    Private ReadOnly _contexts As Dictionary(Of String, Boolean)
 
-    Public Sub New(port As Integer, contexts As Dictionary(Of String, Boolean), Optional log As Action(Of String) = Nothing)
+    Public Sub New(port As Integer, Optional log As Action(Of String) = Nothing)
         _port = port
         _log = If(log, Sub(msg)
                        End Sub)
-        _contexts = contexts
     End Sub
 
     Public Sub Start()
@@ -124,8 +122,7 @@ Public Class WcsTcpServer
                                 _log("Received from client: " & line)
                                 Try
                                     Dim msg = JsonSerializer.Deserialize(Of WcsMessage)(line, _jsonOptions)
-                                    Dim result As Integer = GetResultByContextCode(msg?.ContextCode)
-                                    Dim ack = JsonSerializer.Serialize(New AckMessage With {.Id = msg?.Id, .Result = result}, _jsonOptions)
+                                    Dim ack = JsonSerializer.Serialize(New AckMessage With {.Id = msg?.Id}, _jsonOptions)
                                     writer.WriteLine(ack)
                                     _log("Sent to client: " & ack)
                                 Catch ex As JsonException
@@ -144,28 +141,6 @@ Public Class WcsTcpServer
             End Try
         End Using
     End Sub
-
-    Private Function GetResultByContextCode(contextCode As String) As Integer
-        If String.IsNullOrEmpty(contextCode) Then
-            _log("WARNING: contextCode is null or empty, returning result 0")
-            Return 0
-        End If
-
-        Dim key = contextCode.ToUpperInvariant()
-        Dim isEnabled As Boolean
-
-        If Not _contexts.TryGetValue(key, isEnabled) Then
-            _log("WARNING: contextCode '" & contextCode & "' not found in cache, returning result 0")
-            Return 0
-        End If
-
-        If Not isEnabled Then
-            _log("WARNING: contextCode '" & contextCode & "' is disabled, returning result=0")
-            Return 0
-        End If
-
-        Return 1
-    End Function
 
     Public Class WcsMessage
         <JsonPropertyName("id")>
@@ -194,9 +169,6 @@ Public Class WcsTcpServer
         <JsonPropertyName("id")>
         <JsonIgnore(Condition:=JsonIgnoreCondition.WhenWritingNull)>
         Public Property Id As String
-
-        <JsonPropertyName("result")>
-        Public Property Result As String
     End Class
 
     Private Shared ReadOnly _jsonOptions As New JsonSerializerOptions() With {

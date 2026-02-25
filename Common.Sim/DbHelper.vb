@@ -5,7 +5,7 @@ Public Module DbHelper
     Public Function ExecuteReader(Of T)(
         connectionString As String,
         sql As String,
-        map As Func(Of IDataRecord, T),
+        map As Func(Of IDataRecord, T),     ' Trasforma ogni riga in un oggetto T
         Optional parameters As Dictionary(Of String, Object) = Nothing) As List(Of T)
 
         Dim results As New List(Of T)()
@@ -15,8 +15,8 @@ Public Module DbHelper
                 AddParameters(cmd, parameters)
                 conn.Open()
                 Using dr = cmd.ExecuteReader()
-                    While dr.Read()
-                        results.Add(map(dr))
+                    While dr.Read()     ' Itera ogni riga
+                        results.Add(map(dr))    ' Trasforma la riga in un oggetto T
                     End While
                 End Using
             End Using
@@ -45,9 +45,9 @@ Public Module DbHelper
 
     Private Sub AddParameters(cmd As SqlCommand, parameters As Dictionary(Of String, Object))
         If parameters Is Nothing Then Return
-        For Each kvp In parameters
-            Dim paramName = If(kvp.Key.StartsWith("@"), kvp.Key, "@" & kvp.Key)
-            cmd.Parameters.AddWithValue(paramName, If(kvp.Value, DBNull.Value))
+        For Each param In parameters
+            Dim paramName = If(param.Key.StartsWith("@"), param.Key, "@" & param.Key)
+            cmd.Parameters.AddWithValue(paramName, If(param.Value, DBNull.Value))
         Next
     End Sub
 End Module

@@ -10,11 +10,15 @@ Public Class PlcService
     Private _timer As Timer
     Private _seq As Integer = 0 ' contatore per generare codici a barre univoci
     Private ReadOnly _sendLock As New Object()
-    Private ReadOnly _contexts As String() = {"INBOUND", "OUTBOUND", "INVENTORY", "ERRORSIM"}
+    Private _contexts As String()
 
     Protected Overrides Sub OnStart(ByVal args() As String)
         Dim host As String = TcpConfig.GetTcpHost()
         Dim port As Integer = TcpConfig.GetTcpPort()
+        Dim connString As String = ConnectionStringProvider.GetConnectionString(args)
+
+        _contexts = LoadContexts(connString)
+        Console.WriteLine("[PLC] loaded " & _contexts.Length & " contexts from Db")
 
         _client = New PlcTcpClient(host, port)
         _client.ConnectOrThrow()
@@ -23,6 +27,15 @@ Public Class PlcService
         Console.WriteLine("[PLC] Connected to WCS server at " & host & ":" & port)
 
     End Sub
+
+    Private Function LoadContexts(connectionString As String) As String()
+        Dim rows = DbHelper.ExecuteReader(
+            connectionString,
+            "SELECT ContextCode FROM Contexts WHERE IsEnabled = 1",
+            Function(dr) dr.GetString(0)
+            )
+        Return rows.ToArray()
+    End Function
 
     Private Sub SendBarcode(state As Object)
         If Not Monitor.TryEnter(_sendLock) Then Return ' se il lock è già occupato (invio precedente) esce subito
