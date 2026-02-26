@@ -104,10 +104,10 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
     </Compile>
-    <Compile Include="WcsService.vb">
+    <Compile Include="Services\WcsService.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="WcsService.Designer.vb">
+    <Compile Include="Services\WcsService.Designer.vb">
       <DependentUpon>WcsService.vb</DependentUpon>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -121,7 +121,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="WcsTcpServer.vb" />
+    <Compile Include="Communication\WcsTcpServer.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">

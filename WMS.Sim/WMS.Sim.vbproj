@@ -75,17 +75,17 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
     </Compile>
-    <Compile Include="WmsHostService.Designer.vb">
+    <Compile Include="Services\WmsHostService.Designer.vb">
       <DependentUpon>WmsHostService.vb</DependentUpon>
     </Compile>
-    <Compile Include="WmsHostService.vb">
+    <Compile Include="Services\WmsHostService.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="WmsInstanceProvider.vb" />
-    <Compile Include="WmsService.vb">
+    <Compile Include="Providers\WmsInstanceProvider.vb" />
+    <Compile Include="Services\WmsService.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="WmsService.Designer.vb">
+    <Compile Include="Services\WmsService.Designer.vb">
       <DependentUpon>WmsService.vb</DependentUpon>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -99,7 +99,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="WmsServiceBehaviour.vb" />
+    <Compile Include="Providers\WmsServiceBehaviour.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">

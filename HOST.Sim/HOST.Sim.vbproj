@@ -101,15 +101,15 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HostHttpServer.vb" />
+    <Compile Include="Network\HostHttpServer.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
     </Compile>
-    <Compile Include="HostService.vb">
+    <Compile Include="Services\HostService.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="HostService.Designer.vb">
+    <Compile Include="Services\HostService.Designer.vb">
       <DependentUpon>HostService.vb</DependentUpon>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />

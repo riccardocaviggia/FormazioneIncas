@@ -98,14 +98,14 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BarcodeRepository.vb" />
-    <Compile Include="BarcodeResponse.vb" />
-    <Compile Include="ConnectionStringProvider.vb" />
-    <Compile Include="ContextRecord.vb" />
-    <Compile Include="DbHelper.vb" />
-    <Compile Include="HostConfig.vb" />
-    <Compile Include="HostHttpClient.vb" />
-    <Compile Include="IWmsService.vb" />
+    <Compile Include="Repos\BarcodeRepository.vb" />
+    <Compile Include="Models\Barcode\BarcodeResponse.vb" />
+    <Compile Include="Database\ConnectionStringProvider.vb" />
+    <Compile Include="Models\ContextRecord.vb" />
+    <Compile Include="Database\DbHelper.vb" />
+    <Compile Include="Configuration\HostConfig.vb" />
+    <Compile Include="Clients\HostHttpClient.vb" />
+    <Compile Include="Interfaces\IWmsService.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -122,12 +122,12 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="ServiceHelper.vb" />
-    <Compile Include="TcpConfig.vb" />
-    <Compile Include="WmsConfig.vb" />
-    <Compile Include="WmsRequest.vb" />
-    <Compile Include="WmsResponse.vb" />
-    <Compile Include="WmsWcfClient.vb" />
+    <Compile Include="Helpers\ServiceHelper.vb" />
+    <Compile Include="Configuration\TcpConfig.vb" />
+    <Compile Include="Configuration\WmsConfig.vb" />
+    <Compile Include="Models\WMS\WmsRequest.vb" />
+    <Compile Include="Models\WMS\WmsResponse.vb" />
+    <Compile Include="Clients\WmsWcfClient.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">
@@ -150,6 +150,7 @@
     </None>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Import Project="..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
