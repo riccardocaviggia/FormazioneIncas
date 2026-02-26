@@ -3,7 +3,7 @@
 Public Module TcpConfig
     Public Function GetTcpPort() As Integer
         Dim port As Integer
-        If Integer.TryParse(ConfigurationManager.AppSettings("WcsTcpServerPort"), port) AndAlso port > 0 AndAlso port < 65536 Then
+        If Integer.TryParse(ConfigurationManager.AppSettings("TcpPort"), port) AndAlso port > 0 AndAlso port < 65536 Then
             Return port
         End If
 
@@ -11,7 +11,7 @@ Public Module TcpConfig
     End Function
 
     Public Function GetTcpHost() As String
-        Dim host = ConfigurationManager.AppSettings("WcsTcpServerHost")
+        Dim host = ConfigurationManager.AppSettings("TcpHost")
         If String.IsNullOrEmpty(host) Then
             Throw New ConfigurationErrorsException("WcsTcpServerHost is not configured.")
         End If

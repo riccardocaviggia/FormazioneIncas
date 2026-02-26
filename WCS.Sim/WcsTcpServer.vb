@@ -5,16 +5,19 @@ Imports System.Text
 Imports System.Text.Json
 Imports System.Text.Json.Serialization
 Imports System.Threading
+Imports CommonSim
 
 Public Class WcsTcpServer
     Private ReadOnly _port As Integer
     Private ReadOnly _log As Action(Of String)
+    Private ReadOnly _wmsClient As WmsWcfClient
     Private _listener As TcpListener
-    Private _acceptThread As Thread ' Thread per l'accettazione di nuovi client
-    Private _cts As CancellationTokenSource ' Token per la cancellazione dei thread
+    Private _acceptThread As Thread
+    Private _cts As CancellationTokenSource
 
-    Public Sub New(port As Integer, Optional log As Action(Of String) = Nothing)
+    Public Sub New(port As Integer, wmsClient As WmsWcfClient, Optional log As Action(Of String) = Nothing)
         _port = port
+        _wmsClient = wmsClient
         _log = If(log, Sub(msg)
                        End Sub)
     End Sub
@@ -25,12 +28,12 @@ Public Class WcsTcpServer
         End If
 
         _cts = New CancellationTokenSource()
-        _listener = New TcpListener(IPAddress.Any, _port) ' TcpListener che ascolta su tutte le interfacce di rete
+        _listener = New TcpListener(IPAddress.Any, _port)
         _listener.Start()
 
         _log("WcsTcpServer started. Listening on port " & _port)
 
-        _acceptThread = New Thread(Sub() AcceptLoop(_cts.Token)) With {.IsBackground = True, .Name = "WcsTcpServer.AcceptLoop"} ' Thread background per accettare connessioni
+        _acceptThread = New Thread(Sub() AcceptLoop(_cts.Token)) With {.IsBackground = True, .Name = "WcsTcpServer.AcceptLoop"}
         _acceptThread.Start()
     End Sub
 
@@ -38,17 +41,13 @@ Public Class WcsTcpServer
         _log("WcsTcpServer stopping...")
 
         Try
-            If _cts IsNot Nothing Then
-                _cts.Cancel()
-            End If
+            If _cts IsNot Nothing Then _cts.Cancel()
         Catch ex As Exception
             _log("Error cancelling token: " & ex.ToString())
         End Try
 
         Try
-            If _listener IsNot Nothing Then
-                _listener.Stop()
-            End If
+            If _listener IsNot Nothing Then _listener.Stop()
         Catch ex As Exception
             _log("Error stopping listener: " & ex.ToString())
         End Try
@@ -62,9 +61,7 @@ Public Class WcsTcpServer
         End Try
 
         Try
-            If _cts IsNot Nothing Then
-                _cts.Dispose()
-            End If
+            If _cts IsNot Nothing Then _cts.Dispose()
         Catch ex As Exception
             _log("Error disposing token: " & ex.ToString())
         End Try
@@ -75,10 +72,10 @@ Public Class WcsTcpServer
         _log("WcsTcpServer stopped.")
     End Sub
 
-    Private Sub AcceptLoop(ct As CancellationToken) 'ogni client viene gestito in un thread separato, il loop continua ad accettare nuovi client finché non viene richiesto di fermarsi
+    Private Sub AcceptLoop(ct As CancellationToken)
         While Not ct.IsCancellationRequested
             Try
-                Dim client As TcpClient = _listener.AcceptTcpClient() ' L'esecuzione si blocca qui finché non arriva un nuovo client o il listener viene chiuso
+                Dim client As TcpClient = _listener.AcceptTcpClient()
                 _log("Client connected")
 
                 Dim t As New Thread(Sub() HandleClient(client, ct)) With {.IsBackground = True, .Name = "WcsTcpServer.HandleClient"}
@@ -97,19 +94,19 @@ Public Class WcsTcpServer
 
     Private Sub HandleClient(client As TcpClient, ct As CancellationToken)
         Using client
-            client.NoDelay = True ' Invia subito i pacchetti senza aspettare di riempire il buffer
+            client.NoDelay = True
 
             Try
                 Using ns = client.GetStream()
                     Using reader As New StreamReader(ns, Encoding.UTF8, detectEncodingFromByteOrderMarks:=False, bufferSize:=4096, leaveOpen:=True)
-                        Using writer As New StreamWriter(ns, Encoding.UTF8, bufferSize:=4096, leaveOpen:=True) With {.AutoFlush = True} ' AutoFluch scrive immediatamente nello stream, LeaveOpen lascia lo stream aperto quando il writer viene distrutto
+                        Using writer As New StreamWriter(ns, Encoding.UTF8, bufferSize:=4096, leaveOpen:=True) With {.AutoFlush = True}
                             While Not ct.IsCancellationRequested
                                 Dim line As String
 
                                 Try
                                     line = reader.ReadLine()
                                 Catch ex As IOException
-                                    _log("Client read IO error: " & ex.Message())
+                                    _log("Client read IO error: " & ex.Message)
                                     Exit While
                                 Catch ex As Exception
                                     _log("Client read unexpected error: " & ex.ToString())
@@ -119,14 +116,30 @@ Public Class WcsTcpServer
                                 If line Is Nothing Then Exit While
                                 If line.Length = 0 Then Continue While
 
-                                _log("Received from client: " & line)
+                                _log("Received from PLC: " & line)
+
                                 Try
                                     Dim msg = JsonSerializer.Deserialize(Of WcsMessage)(line, _jsonOptions)
-                                    Dim ack = JsonSerializer.Serialize(New AckMessage With {.Id = msg?.Id}, _jsonOptions)
+
+                                    ' Chiama il WMS
+                                    Dim wmsResponse As WmsResponse = Nothing
+                                    Try
+                                        wmsResponse = _wmsClient.ProcessBarcode(msg.Value, msg.ContextCode)
+                                        _log("WMS response: Allowed=" & wmsResponse.Allowed & " Reason=" & wmsResponse.Reason)
+                                    Catch ex As Exception
+                                        _log("ERROR calling WMS: " & ex.Message)
+                                    End Try
+
+                                    ' Manda ACK al PLC
+                                    Dim ack = JsonSerializer.Serialize(New AckMessage With {
+                                        .Id = msg?.Id,
+                                        .Ok = wmsResponse IsNot Nothing AndAlso wmsResponse.Allowed
+                                    }, _jsonOptions)
                                     writer.WriteLine(ack)
-                                    _log("Sent to client: " & ack)
+                                    _log("Sent ACK to PLC: " & ack)
+
                                 Catch ex As JsonException
-                                    _log("Invalid JSON from client: " & ex.Message())
+                                    _log("Invalid JSON from PLC: " & ex.Message)
                                     Exit While
                                 Catch ex As IOException
                                     _log("Client write IO error: " & ex.Message)

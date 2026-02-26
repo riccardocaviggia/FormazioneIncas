@@ -14,7 +14,7 @@ Public Class PlcTcpClient
         _port = port
     End Sub
 
-    Public Sub ConnectOrThrow(Optional timeoutMs As Integer = 5000)
+    Public Sub ConnectOrThrow(Optional timeoutMs As Integer = 30000)
         Disconnect()
 
         _client = New TcpClient()

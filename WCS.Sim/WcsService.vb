@@ -1,5 +1,5 @@
-﻿Imports CommonSim
-Imports System.ServiceProcess
+﻿Imports System.ServiceProcess
+Imports CommonSim
 
 Public Class WcsService
     Inherits ServiceBase
@@ -8,11 +8,14 @@ Public Class WcsService
 
     Protected Overrides Sub OnStart(ByVal args() As String)
         Dim port As Integer = TcpConfig.GetTcpPort()
-        Dim cs As String = ConnectionStringProvider.GetConnectionString(args)
+        Dim wmsEndpoint As String = WmsConfig.GetWmsEndpoint()
 
-
-        _server = New WcsTcpServer(port, Sub(msg) Console.WriteLine("[WcsService] " & msg))
+        Dim wmsClient As New WmsWcfClient(wmsEndpoint)
+        _server = New WcsTcpServer(port, wmsClient, Sub(msg) Console.WriteLine("[WcsService] " & msg))
         _server.Start()
+
+        Console.WriteLine("[WCS] Started on port " & port)
+        Console.WriteLine("[WCS] WMS endpoint: " & wmsEndpoint)
     End Sub
 
     Protected Overrides Sub OnStop()
