@@ -2,6 +2,7 @@
 
 Public Class HostService
     Private _server As HostHttpServer
+    Private _logger As ServiceLogger
 
     Protected Overrides Sub OnStart(ByVal args() As String)
         Dim cs As String = ConnectionStringProvider.GetConnectionString(args)
@@ -9,10 +10,13 @@ Public Class HostService
         Dim repository As New BarcodeRepository(cs)
         Dim authorizationService As IBarcodeAuthorizationService = New BarcodeAuthorizationService(repository)
 
-        _server = New HostHttpServer(endpoint, authorizationService, Sub(msg) Console.WriteLine("[HostService] " & msg))
+        _logger = New ServiceLogger(cs, "HOST.Sim", Sub()
+                                                    End Sub)
+
+        _server = New HostHttpServer(endpoint, authorizationService, logger:=_logger)
         _server.Start()
 
-        Console.WriteLine("[HostService] Started. Listening on " & endpoint)
+        _logger.Info("HOST.Started")
     End Sub
 
     Protected Overrides Sub OnStop()
@@ -20,6 +24,7 @@ Public Class HostService
             _server.Stop()
             _server = Nothing
         End If
-    End Sub
 
+        _logger?.Info("HOST.Stopped")
+    End Sub
 End Class

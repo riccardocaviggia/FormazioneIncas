@@ -102,8 +102,11 @@
     <Compile Include="Contracts\IHostGateway.vb" />
     <Compile Include="Contracts\IWcsMessageHandler.vb" />
     <Compile Include="Contracts\IWmsClient.vb" />
+    <Compile Include="Logging\ServiceLogger.vb" />
+    <Compile Include="Logging\ServiceLogRepository.vb" />
     <Compile Include="Messaging\AckMessage.vb" />
     <Compile Include="Messaging\WcsInboundMessage.vb" />
+    <Compile Include="Models\Logging\ServiceLogEntry.vb" />
     <Compile Include="Repos\BarcodeRepository.vb" />
     <Compile Include="Models\Barcode\BarcodeResponse.vb" />
     <Compile Include="Database\ConnectionStringProvider.vb" />

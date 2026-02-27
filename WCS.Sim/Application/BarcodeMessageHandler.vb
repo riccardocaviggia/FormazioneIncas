@@ -5,22 +5,29 @@ Public Class BarcodeMessageHandler
     Implements IWcsMessageHandler
 
     Private ReadOnly _wmsClient As IWmsClient
-    Private ReadOnly _log As Action(Of String)
+    Private ReadOnly _logger As ServiceLogger
 
-    Public Sub New(wmsClient As IWmsClient, Optional log As Action(Of String) = Nothing)
+    Public Sub New(wmsClient As IWmsClient, Optional logger As ServiceLogger = Nothing)
         _wmsClient = wmsClient
-        _log = If(log, Sub()
-                       End Sub)
+        _logger = logger
     End Sub
+
     Public Async Function HandleAsync(message As WcsInboundMessage, ct As CancellationToken) As Task(Of AckMessage) Implements IWcsMessageHandler.HandleAsync
         If message Is Nothing Then Throw New ArgumentNullException(NameOf(message))
 
-        Dim response = Await _wmsClient.ProcessBarcodeAsync(message.Value, message.ContextCode, ct)
-        _log($"[Handler] WMS allowed={response.Allowed} Reason={response.Reason}")
+        _logger?.Info("WCS.CallWms", correlationId:=message.Id, barcode:=message.Value, contextCode:=message.ContextCode)
 
-        Return New AckMessage With {
-            .Id = message.Id,
-            .Ok = response.Allowed
-        }
+        Try
+            Dim response = Await _wmsClient.ProcessBarcodeAsync(message.Value, message.ContextCode, ct)
+            _logger?.Info("WCS.WmsResponse", correlationId:=message.Id, barcode:=message.Value, contextCode:=message.ContextCode)
+
+            Return New AckMessage With {
+                .Id = message.Id,
+                .Ok = response.Allowed
+            }
+        Catch ex As Exception
+            _logger?.[Error]("WCS.WmsCallFailed", ex, correlationId:=message.Id, barcode:=message.Value, contextCode:=message.ContextCode)
+            Throw
+        End Try
     End Function
 End Class

@@ -1,6 +1,8 @@
 ﻿Imports System.Net.Http
 Imports System.Text.Json
 Imports System.Threading
+Imports System.Threading.Tasks
+Imports CommonSim
 
 Public Class HostHttpClient
     Implements IHostGateway

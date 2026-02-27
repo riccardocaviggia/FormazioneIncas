@@ -8,16 +8,20 @@ Public Class HostHttpServer
     Private ReadOnly _endpoint As String
     Private ReadOnly _authorizationService As IBarcodeAuthorizationService
     Private ReadOnly _log As Action(Of String)
+    Private ReadOnly _logger As ServiceLogger
     Private _listener As HttpListener
     Private _listenerThread As Thread
     Private _cts As CancellationTokenSource
 
-    Public Sub New(endpoint As String, authorizationService As IBarcodeAuthorizationService, Optional log As Action(Of String) = Nothing)
-        If authorizationService Is Nothing Then Throw New ArgumentNullException(NameOf(authorizationService))
+    Public Sub New(endpoint As String,
+                   authorizationService As IBarcodeAuthorizationService,
+                   Optional log As Action(Of String) = Nothing,
+                   Optional logger As ServiceLogger = Nothing)
         _endpoint = endpoint
         _authorizationService = authorizationService
         _log = If(log, Sub(msg)
                        End Sub)
+        _logger = logger
     End Sub
 
     Public Sub Start()
@@ -94,6 +98,8 @@ Public Class HostHttpServer
     Private Sub HandleRequest(context As HttpListenerContext)
         Dim request = context.Request
         Dim response = context.Response
+        Dim barcodeValue As String = Nothing
+        Dim contextCode As String = Nothing
 
         Try
             If request.HttpMethod <> "GET" OrElse Not request.Url.AbsolutePath.TrimEnd("/"c).Equals("/api/barcode", StringComparison.OrdinalIgnoreCase) Then
@@ -101,25 +107,29 @@ Public Class HostHttpServer
                 Return
             End If
 
-            Dim BarcodeValue = request.QueryString("barcodeValue")
-            Dim contextCode = request.QueryString("contextCode")
+            barcodeValue = request.QueryString("barcodeValue")
+            contextCode = request.QueryString("contextCode")
 
-            If String.IsNullOrWhiteSpace(BarcodeValue) OrElse String.IsNullOrWhiteSpace(contextCode) Then
+            If String.IsNullOrWhiteSpace(barcodeValue) OrElse String.IsNullOrWhiteSpace(contextCode) Then
                 SendResponse(response, HttpStatusCode.BadRequest, "{""error"":""barcodeValue and contextCode are required""}")
                 Return
             End If
 
-            _log("Request: barcodeValue = " & BarcodeValue & " contextCode = " & contextCode)
+            _log("Request: barcodeValue = " & barcodeValue & " contextCode = " & contextCode)
+            _logger?.Info("HOST.Request", barcode:=barcodeValue, contextCode:=contextCode)
 
-            Dim allowed As Boolean = _authorizationService.IsAuthorized(BarcodeValue, contextCode)
+            Dim allowed As Boolean = _authorizationService.IsAuthorized(barcodeValue, contextCode)
             Dim json = JsonSerializer.Serialize(New BarcodeResponse With {
                                                 .Allowed = allowed,
-                                                .BarcodeValue = BarcodeValue,
+                                                .BarcodeValue = barcodeValue,
                                                 .ContextCode = contextCode})
             _log("Response: " & json)
+            _logger?.Info("HOST.Response", barcode:=barcodeValue, contextCode:=contextCode)
+
             SendResponse(response, HttpStatusCode.OK, json)
         Catch ex As Exception
             _log("Error handling request: " & ex.ToString())
+            _logger?.[Error]("HOST.RequestError", ex, barcode:=barcodeValue, contextCode:=contextCode)
             SendResponse(response, HttpStatusCode.InternalServerError, "{""error"":""Internal server error""}")
         End Try
     End Sub

@@ -6,13 +6,18 @@ Public Class WmsHostService
     Inherits ServiceBase
 
     Private _host As ServiceHost
+    Private _logger As ServiceLogger
 
     Protected Overrides Sub OnStart(ByVal args() As String)
         Dim wmsEndpoint As New Uri(WmsConfig.GetWmsEndpoint())
         Dim hostEndpoint As String = HostConfig.GetHostEndpoint()
+        Dim connectionString As String = ConnectionStringProvider.GetConnectionString(args)
+
+        _logger = New ServiceLogger(connectionString, "WMS.Sim", Sub()
+                                                                 End Sub)
 
         Dim hostGateway As IHostGateway = New HostHttpClient(hostEndpoint)
-        Dim handler As IWmsBarcodeHandler = New WmsBarcodeHandler(hostGateway, Sub(msg) Console.WriteLine(msg))
+        Dim handler As IWmsBarcodeHandler = New WmsBarcodeHandler(hostGateway, _logger)
 
         _host = New ServiceHost(GetType(WmsService), wmsEndpoint)
         _host.Description.Behaviors.Add(New WmsServiceBehavior(handler))
@@ -24,8 +29,7 @@ Public Class WmsHostService
         _host.Description.Behaviors.Add(smb)
 
         _host.Open()
-        Console.WriteLine("[WMS] WCF service started at " & wmsEndpoint.ToString())
-        Console.WriteLine("[WMS] HOST endpoint: " & hostEndpoint)
+        _logger.Info("WMS.Started")
     End Sub
 
     Protected Overrides Sub OnStop()
@@ -33,6 +37,7 @@ Public Class WmsHostService
             _host.Close()
             _host = Nothing
         End If
-        Console.WriteLine("[WMS] WCF service stopped.")
+
+        _logger?.Info("WMS.Stopped")
     End Sub
 End Class

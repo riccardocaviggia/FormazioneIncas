@@ -1,4 +1,5 @@
 ﻿Imports System.ServiceProcess
+Imports System.Text.Json
 Imports System.Threading
 Imports CommonSim
 
@@ -9,14 +10,23 @@ Public Class PlcService
     Private _timer As Timer
     Private ReadOnly _sendLock As New Object()
     Private _barcodeProvider As IBarcodeProvider
+    Private _logger As ServiceLogger
+
+    Private Shared ReadOnly _jsonOptions As New JsonSerializerOptions() With {
+        .PropertyNameCaseInsensitive = True
+    }
 
     Protected Overrides Sub OnStart(ByVal args() As String)
         Dim host As String = TcpConfig.GetTcpHost()
         Dim port As Integer = TcpConfig.GetTcpPort()
         Dim connString As String = ConnectionStringProvider.GetConnectionString(args)
 
+        _logger = New ServiceLogger(connString, "PLC.Sim", Sub()
+                                                           End Sub)
+        _logger.Info("PLC.Starting")
+
         Dim contexts = LoadContexts(connString)
-        Console.WriteLine("[PLC] loaded " & contexts.Length & " contexts from Db")
+        _logger.Info($"PLC.ContextsLoaded[items={contexts.Length}]")
 
         _barcodeProvider = New SequentialBarcodeProvider(contexts)
 
@@ -25,7 +35,7 @@ Public Class PlcService
         _channel.Connect()
 
         _timer = New Timer(AddressOf SendBarcode, state:=Nothing, dueTime:=1000, period:=5000)
-        Console.WriteLine("[PLC] Connected to WCS server at " & host & ":" & port)
+        _logger.Info("PLC.ConnectedToWcs")
     End Sub
 
     Private Function LoadContexts(connectionString As String) As String()
@@ -40,20 +50,27 @@ Public Class PlcService
     Private Sub SendBarcode(state As Object)
         If _barcodeProvider Is Nothing OrElse _channel Is Nothing Then Return
         If Not Monitor.TryEnter(_sendLock) Then Return
-            Try
-                Dim payload As String = _barcodeProvider.CreatePayload()
-                Dim ack As String = _channel.Send(payload)
 
-                Console.WriteLine("[PLC] Sent: " & payload)
-                Console.WriteLine("[PLC] Received ACK: " & ack)
-            Catch ex As Exception
-                Console.WriteLine("[PLC] ERROR: " & ex.Message)
-            Finally
-                Monitor.Exit(_sendLock)
-            End Try
+        Dim message As WcsInboundMessage = Nothing
+
+        Try
+            Dim payload As String = _barcodeProvider.CreatePayload()
+            message = JsonSerializer.Deserialize(Of WcsInboundMessage)(payload, _jsonOptions)
+
+            Dim ack As String = _channel.Send(payload)
+
+            _logger?.Info("PLC.BarcodeSent", correlationId:=message?.Id, barcode:=message?.Value, contextCode:=message?.ContextCode)
+            _logger?.Info("PLC.AckReceived", correlationId:=message?.Id, barcode:=message?.Value, contextCode:=message?.ContextCode)
+        Catch ex As Exception
+            _logger?.[Error]("PLC.SendFailed", ex, correlationId:=message?.Id, barcode:=message?.Value, contextCode:=message?.ContextCode)
+        Finally
+            Monitor.Exit(_sendLock)
+        End Try
     End Sub
 
     Protected Overrides Sub OnStop()
+        _logger?.Info("PLC.Stopping")
+
         Try
             If _timer IsNot Nothing Then
                 _timer.Dispose()
@@ -68,5 +85,6 @@ Public Class PlcService
         End If
 
         _barcodeProvider = Nothing
+        _logger?.Info("PLC.Stopped")
     End Sub
 End Class

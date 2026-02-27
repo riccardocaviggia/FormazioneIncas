@@ -1,18 +1,16 @@
 Imports System.Threading
-Imports System.Threading.Tasks
 Imports CommonSim
 
 Public Class WmsBarcodeHandler
     Implements IWmsBarcodeHandler
 
     Private ReadOnly _hostGateway As IHostGateway
-    Private ReadOnly _log As Action(Of String)
+    Private ReadOnly _logger As ServiceLogger
 
-    Public Sub New(hostGateway As IHostGateway, Optional log As Action(Of String) = Nothing)
+    Public Sub New(hostGateway As IHostGateway, Optional logger As ServiceLogger = Nothing)
         If hostGateway Is Nothing Then Throw New ArgumentNullException(NameOf(hostGateway))
         _hostGateway = hostGateway
-        _log = If(log, Sub()
-                       End Sub)
+        _logger = logger
     End Sub
 
     Public Async Function ProcessAsync(request As WmsRequest,
@@ -20,18 +18,19 @@ Public Class WmsBarcodeHandler
                                        Implements IWmsBarcodeHandler.ProcessAsync
         If request Is Nothing Then Throw New ArgumentNullException(NameOf(request))
 
-        _log($"[WMS] Received barcode: {request.BarcodeValue} context: {request.ContextCode}")
+        _logger?.Info("WMS.RequestReceived", barcode:=request.BarcodeValue, contextCode:=request.ContextCode)
 
         Try
             Dim result = Await _hostGateway.CheckBarcodeAsync(request.BarcodeValue, request.ContextCode, ct)
-            _log($"[WMS] HOST response: Allowed={result.Allowed}")
+            _logger?.Info("WMS.HostResponse", barcode:=request.BarcodeValue, contextCode:=request.ContextCode)
 
             Return New WmsResponse With {
                 .Allowed = result.Allowed,
                 .Reason = If(result.Allowed, "OK", "Barcode not authorized for this context")
             }
         Catch ex As Exception
-            _log($"[WMS] ERROR calling HOST: {ex.Message}")
+            _logger?.[Error]("WMS.HostError", ex, barcode:=request.BarcodeValue, contextCode:=request.ContextCode)
+
             Return New WmsResponse With {
                 .Allowed = False,
                 .Reason = "HOST unreachable: " & ex.Message
