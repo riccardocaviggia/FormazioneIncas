@@ -6,15 +6,16 @@ Imports CommonSim
 
 Public Class HostHttpServer
     Private ReadOnly _endpoint As String
-    Private ReadOnly _repository As BarcodeRepository
+    Private ReadOnly _authorizationService As IBarcodeAuthorizationService
     Private ReadOnly _log As Action(Of String)
     Private _listener As HttpListener
     Private _listenerThread As Thread
     Private _cts As CancellationTokenSource
 
-    Public Sub New(endpoint As String, repository As BarcodeRepository, Optional log As Action(Of String) = Nothing)
+    Public Sub New(endpoint As String, authorizationService As IBarcodeAuthorizationService, Optional log As Action(Of String) = Nothing)
+        If authorizationService Is Nothing Then Throw New ArgumentNullException(NameOf(authorizationService))
         _endpoint = endpoint
-        _repository = repository
+        _authorizationService = authorizationService
         _log = If(log, Sub(msg)
                        End Sub)
     End Sub
@@ -110,7 +111,7 @@ Public Class HostHttpServer
 
             _log("Request: barcodeValue = " & BarcodeValue & " contextCode = " & contextCode)
 
-            Dim allowed As Boolean = _repository.IsAuthorized(BarcodeValue, contextCode)
+            Dim allowed As Boolean = _authorizationService.IsAuthorized(BarcodeValue, contextCode)
             Dim json = JsonSerializer.Serialize(New BarcodeResponse With {
                                                 .Allowed = allowed,
                                                 .BarcodeValue = BarcodeValue,

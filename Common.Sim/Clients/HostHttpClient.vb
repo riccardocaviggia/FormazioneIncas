@@ -1,8 +1,10 @@
 ﻿Imports System.Net.Http
 Imports System.Text.Json
-Imports CommonSim
+Imports System.Threading
 
 Public Class HostHttpClient
+    Implements IHostGateway
+
     Private ReadOnly _baseUrl As String
     Private Shared ReadOnly _httpClient As New HttpClient()
 
@@ -10,13 +12,16 @@ Public Class HostHttpClient
         _baseUrl = baseUrl.TrimEnd("/"c)
     End Sub
 
-    Public Function CheckBarcode(barcodeValue As String, contextCode As String) As BarcodeResponse
+    Public Async Function CheckBarcodeAsync(barcodeValue As String,
+                                            contextCode As String,
+                                            ct As CancellationToken) As Task(Of BarcodeResponse) _
+                                            Implements IHostGateway.CheckBarcodeAsync
         Dim url = $"{_baseUrl}/api/barcode?barcodeValue={Uri.EscapeDataString(barcodeValue)}&contextCode={Uri.EscapeDataString(contextCode)}"
 
-        Dim responseMessage = _httpClient.GetAsync(url).Result
+        Dim responseMessage = Await _httpClient.GetAsync(url, ct).ConfigureAwait(False)
         responseMessage.EnsureSuccessStatusCode()
 
-        Dim json = responseMessage.Content.ReadAsStringAsync().Result
+        Dim json = Await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(False)
         Return JsonSerializer.Deserialize(Of BarcodeResponse)(json, _jsonOptions)
     End Function
 

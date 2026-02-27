@@ -100,6 +100,7 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Application\BarcodeMessageHandler.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
@@ -148,6 +149,10 @@
     <ProjectReference Include="..\Common.Sim\Common.Sim.vbproj">
       <Project>{640151c0-b040-479e-90d9-fa7536b15f9b}</Project>
       <Name>Common.Sim</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WMS.Sim\WMS.Sim.vbproj">
+      <Project>{9BDA4F8D-8EE6-4B72-959B-1C10B2ACE5A4}</Project>
+      <Name>WMS.Sim</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />

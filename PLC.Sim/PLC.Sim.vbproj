@@ -71,6 +71,10 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Application\IBarcodeProvider.vb" />
+    <Compile Include="Application\SequentialBarcodeProvider.vb" />
+    <Compile Include="Communication\IPlcChannel.vb" />
+    <Compile Include="Communication\PlcTcpChannel.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>

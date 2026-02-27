@@ -3,21 +3,21 @@ Imports System.Net
 Imports System.Net.Sockets
 Imports System.Text
 Imports System.Text.Json
-Imports System.Text.Json.Serialization
 Imports System.Threading
 Imports CommonSim
 
 Public Class WcsTcpServer
     Private ReadOnly _port As Integer
     Private ReadOnly _log As Action(Of String)
-    Private ReadOnly _wmsClient As WmsWcfClient
+    Private ReadOnly _handler As IWcsMessageHandler
     Private _listener As TcpListener
     Private _acceptThread As Thread
     Private _cts As CancellationTokenSource
 
-    Public Sub New(port As Integer, wmsClient As WmsWcfClient, Optional log As Action(Of String) = Nothing)
+    Public Sub New(port As Integer, handler As IWcsMessageHandler, Optional log As Action(Of String) = Nothing)
+        If handler Is Nothing Then Throw New ArgumentNullException(NameOf(handler))
         _port = port
-        _wmsClient = wmsClient
+        _handler = handler
         _log = If(log, Sub(msg)
                        End Sub)
     End Sub
@@ -119,24 +119,25 @@ Public Class WcsTcpServer
                                 _log("Received from PLC: " & line)
 
                                 Try
-                                    Dim msg = JsonSerializer.Deserialize(Of WcsMessage)(line, _jsonOptions)
+                                    Dim msg = JsonSerializer.Deserialize(Of WcsInboundMessage)(line, _jsonOptions)
 
-                                    ' Chiama il WMS
-                                    Dim wmsResponse As WmsResponse = Nothing
+                                    Dim ackMessage As AckMessage = Nothing
                                     Try
-                                        wmsResponse = _wmsClient.ProcessBarcode(msg.Value, msg.ContextCode)
-                                        _log("WMS response: Allowed=" & wmsResponse.Allowed & " Reason=" & wmsResponse.Reason)
+                                        ackMessage = _handler.HandleAsync(msg, ct).GetAwaiter().GetResult()
+                                    Catch ex As OperationCanceledException When ct.IsCancellationRequested
+                                        Exit While
                                     Catch ex As Exception
-                                        _log("ERROR calling WMS: " & ex.Message)
+                                        _log("ERROR handling inbound message: " & ex.ToString())
+                                        ackMessage = New AckMessage With {
+                                            .Id = msg?.Id,
+                                            .Ok = False
+                                        }
                                     End Try
 
                                     ' Manda ACK al PLC
-                                    Dim ack = JsonSerializer.Serialize(New AckMessage With {
-                                        .Id = msg?.Id,
-                                        .Ok = wmsResponse IsNot Nothing AndAlso wmsResponse.Allowed
-                                    }, _jsonOptions)
-                                    writer.WriteLine(ack)
-                                    _log("Sent ACK to PLC: " & ack)
+                                    Dim ackJson = JsonSerializer.Serialize(AckMessage, _jsonOptions)
+                                    writer.WriteLine(ackJson)
+                                    _log("Sent ACK to PLC: " & ackJson)
 
                                 Catch ex As JsonException
                                     _log("Invalid JSON from PLC: " & ex.Message)
@@ -154,35 +155,6 @@ Public Class WcsTcpServer
             End Try
         End Using
     End Sub
-
-    Public Class WcsMessage
-        <JsonPropertyName("id")>
-        Public Property Id As String
-
-        <JsonPropertyName("type")>
-        Public Property Type As String
-
-        <JsonPropertyName("value")>
-        Public Property Value As String
-
-        <JsonPropertyName("contextCode")>
-        Public Property ContextCode As String
-
-        <JsonPropertyName("ts")>
-        Public Property Ts As String
-    End Class
-
-    Public Class AckMessage
-        <JsonPropertyName("type")>
-        Public Property Type As String = "ack"
-
-        <JsonPropertyName("ok")>
-        Public Property Ok As Boolean = True
-
-        <JsonPropertyName("id")>
-        <JsonIgnore(Condition:=JsonIgnoreCondition.WhenWritingNull)>
-        Public Property Id As String
-    End Class
 
     Private Shared ReadOnly _jsonOptions As New JsonSerializerOptions() With {
         .PropertyNameCaseInsensitive = True

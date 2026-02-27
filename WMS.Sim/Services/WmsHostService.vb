@@ -11,16 +11,16 @@ Public Class WmsHostService
         Dim wmsEndpoint As New Uri(WmsConfig.GetWmsEndpoint())
         Dim hostEndpoint As String = HostConfig.GetHostEndpoint()
 
-        Dim hostClient As New HostHttpClient(hostEndpoint)
+        Dim hostGateway As IHostGateway = New HostHttpClient(hostEndpoint)
+        Dim handler As IWmsBarcodeHandler = New WmsBarcodeHandler(hostGateway, Sub(msg) Console.WriteLine(msg))
 
         _host = New ServiceHost(GetType(WmsService), wmsEndpoint)
-        _host.Description.Behaviors.Add(New WmsServiceBehavior(hostClient))
+        _host.Description.Behaviors.Add(New WmsServiceBehavior(handler))
 
         Dim binding As New BasicHttpBinding()
         _host.AddServiceEndpoint(GetType(IWmsService), binding, "")
 
-        Dim smb As New Description.ServiceMetadataBehavior()
-        smb.HttpGetEnabled = True
+        Dim smb As New Description.ServiceMetadataBehavior With {.HttpGetEnabled = True}
         _host.Description.Behaviors.Add(smb)
 
         _host.Open()
@@ -35,5 +35,4 @@ Public Class WmsHostService
         End If
         Console.WriteLine("[WMS] WCF service stopped.")
     End Sub
-
 End Class

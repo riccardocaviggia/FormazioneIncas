@@ -7,11 +7,13 @@ Public Class WcsService
     Private _server As WcsTcpServer
 
     Protected Overrides Sub OnStart(ByVal args() As String)
-        Dim port As Integer = TcpConfig.GetTcpPort()
-        Dim wmsEndpoint As String = WmsConfig.GetWmsEndpoint()
+        Dim port = TcpConfig.GetTcpPort()
+        Dim wmsEndpoint = WmsConfig.GetWmsEndpoint()
 
-        Dim wmsClient As New WmsWcfClient(wmsEndpoint)
-        _server = New WcsTcpServer(port, wmsClient, Sub(msg) Console.WriteLine("[WcsService] " & msg))
+        Dim wmsClient As IWmsClient = New WmsWcfClient(wmsEndpoint)
+        Dim handler As IWcsMessageHandler = New BarcodeMessageHandler(wmsClient, Sub(msg) Console.WriteLine("[Handler] " & msg))
+
+        _server = New WcsTcpServer(port, handler, Sub(msg) Console.WriteLine("[WcsService] " & msg))
         _server.Start()
 
         Console.WriteLine("[WCS] Started on port " & port)

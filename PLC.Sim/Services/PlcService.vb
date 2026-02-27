@@ -1,31 +1,31 @@
-﻿Imports System.IO
-Imports System.ServiceProcess
+﻿Imports System.ServiceProcess
 Imports System.Threading
 Imports CommonSim
 
 Public Class PlcService
     Inherits ServiceBase
 
-    Private _client As PlcTcpClient
+    Private _channel As IPlcChannel
     Private _timer As Timer
-    Private _seq As Integer = 0 ' contatore per generare codici a barre univoci
     Private ReadOnly _sendLock As New Object()
-    Private _contexts As String()
+    Private _barcodeProvider As IBarcodeProvider
 
     Protected Overrides Sub OnStart(ByVal args() As String)
         Dim host As String = TcpConfig.GetTcpHost()
         Dim port As Integer = TcpConfig.GetTcpPort()
         Dim connString As String = ConnectionStringProvider.GetConnectionString(args)
 
-        _contexts = LoadContexts(connString)
-        Console.WriteLine("[PLC] loaded " & _contexts.Length & " contexts from Db")
+        Dim contexts = LoadContexts(connString)
+        Console.WriteLine("[PLC] loaded " & contexts.Length & " contexts from Db")
 
-        _client = New PlcTcpClient(host, port)
-        _client.ConnectOrThrow()
+        _barcodeProvider = New SequentialBarcodeProvider(contexts)
 
-        _timer = New Timer(AddressOf SendBarcode, state:=Nothing, dueTime:=1000, period:=5000) ' invia un barcode ogni 5 secondi dopo un ritardo iniziale di 1 secondo
+        Dim tcpClient = New PlcTcpClient(host, port)
+        _channel = New PlcTcpChannel(tcpClient)
+        _channel.Connect()
+
+        _timer = New Timer(AddressOf SendBarcode, state:=Nothing, dueTime:=1000, period:=5000)
         Console.WriteLine("[PLC] Connected to WCS server at " & host & ":" & port)
-
     End Sub
 
     Private Function LoadContexts(connectionString As String) As String()
@@ -33,27 +33,24 @@ Public Class PlcService
             connectionString,
             "SELECT ContextCode FROM Contexts WHERE IsEnabled = 1",
             Function(dr) dr.GetString(0)
-            )
+        )
         Return rows.ToArray()
     End Function
 
     Private Sub SendBarcode(state As Object)
-        If Not Monitor.TryEnter(_sendLock) Then Return ' se il lock è già occupato (invio precedente) esce subito
-        Try
-            _seq += 1
-            Dim barcodeValue As String = "BC" & _seq.ToString("00000000")
-            Dim id As String = Guid.NewGuid().ToString("N")
-            Dim contextCode As String = _contexts((_seq - 1) Mod _contexts.Length)
-            Dim msq As String = "{""type"":""barcode"",""id"":""" & id & """,""value"":""" & barcodeValue & """, " & """contextCode"":""" & contextCode & """," & """ts"":""" & DateTime.UtcNow.ToString("o") & """}"
-            Dim ack As String = _client.SendAndWaitAck(msq)
+        If _barcodeProvider Is Nothing OrElse _channel Is Nothing Then Return
+        If Not Monitor.TryEnter(_sendLock) Then Return
+            Try
+                Dim payload As String = _barcodeProvider.CreatePayload()
+                Dim ack As String = _channel.Send(payload)
 
-            Console.WriteLine("[PLC] Sent: " & msq)
-            Console.WriteLine("[PLC] Received ACK: " & ack)
-        Catch ex As Exception
-            Console.WriteLine("[PLC] ERROR: " & ex.Message)
-        Finally
-            Monitor.Exit(_sendLock)
-        End Try
+                Console.WriteLine("[PLC] Sent: " & payload)
+                Console.WriteLine("[PLC] Received ACK: " & ack)
+            Catch ex As Exception
+                Console.WriteLine("[PLC] ERROR: " & ex.Message)
+            Finally
+                Monitor.Exit(_sendLock)
+            End Try
     End Sub
 
     Protected Overrides Sub OnStop()
@@ -62,13 +59,14 @@ Public Class PlcService
                 _timer.Dispose()
                 _timer = Nothing
             End If
-        Catch ex As Exception
+        Catch
         End Try
 
-        If _client IsNot Nothing Then
-            _client.Disconnect()
-            _client = Nothing
+        If _channel IsNot Nothing Then
+            _channel.Disconnect()
+            _channel = Nothing
         End If
-    End Sub
 
+        _barcodeProvider = Nothing
+    End Sub
 End Class

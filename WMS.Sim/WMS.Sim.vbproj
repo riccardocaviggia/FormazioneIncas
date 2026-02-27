@@ -71,6 +71,9 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Application\BarcodeMessageHandler.vb" />
+    <Compile Include="Application\IWmsBarcodeHandler.vb" />
+    <Compile Include="Application\WmsBarcodeHandler.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
