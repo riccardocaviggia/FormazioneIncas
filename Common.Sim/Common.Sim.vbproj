@@ -98,6 +98,9 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Clients\WcsDispatchClient.vb" />
+    <Compile Include="Clients\WmsDispatchClient.vb" />
+    <Compile Include="Configuration\WcsConfig.vb" />
     <Compile Include="Contracts\IBarcodeAuthorizationService.vb" />
     <Compile Include="Contracts\IHostGateway.vb" />
     <Compile Include="Contracts\IWcsMessageHandler.vb" />
@@ -106,7 +109,11 @@
     <Compile Include="Logging\ServiceLogRepository.vb" />
     <Compile Include="Messaging\AckMessage.vb" />
     <Compile Include="Messaging\WcsInboundMessage.vb" />
+    <Compile Include="Models\Dispatch\DispatchBatchRequest.vb" />
+    <Compile Include="Models\Dispatch\DispatchBatchResponse.vb" />
+    <Compile Include="Models\Dispatch\DispatchOrderDto.vb" />
     <Compile Include="Models\Logging\ServiceLogEntry.vb" />
+    <Compile Include="Models\Orders\OrderRecord.vb" />
     <Compile Include="Repos\BarcodeRepository.vb" />
     <Compile Include="Models\Barcode\BarcodeResponse.vb" />
     <Compile Include="Database\ConnectionStringProvider.vb" />
@@ -137,6 +144,8 @@
     <Compile Include="Models\WMS\WmsRequest.vb" />
     <Compile Include="Models\WMS\WmsResponse.vb" />
     <Compile Include="Clients\WmsWcfClient.vb" />
+    <Compile Include="Repos\OrderDispatchRepository.vb" />
+    <Compile Include="Repos\OrdersRepository.vb" />
     <Compile Include="Services\BarcodeAuthorizationService.vb" />
   </ItemGroup>
   <ItemGroup>

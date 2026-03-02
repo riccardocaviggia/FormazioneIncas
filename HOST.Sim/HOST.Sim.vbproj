@@ -127,6 +127,12 @@
     <Compile Include="Services\ProjectInstaller.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Services\OrderPollingService.Designer.vb">
+      <DependentUpon>OrderPollingService.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Services\OrderPollingService.vb">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">

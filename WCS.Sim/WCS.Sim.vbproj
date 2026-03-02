@@ -102,6 +102,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Application\BarcodeMessageHandler.vb" />
+    <Compile Include="Dispatch\IOrderDeliveryChannel.vb" />
+    <Compile Include="Dispatch\LoggingOrderDeliveryChannel.vb" />
+    <Compile Include="Dispatch\WcsDispatchServer.vb" />
+    <Compile Include="Dispatch\WcsOrderDispatcher.vb" />
+    <Compile Include="Dispatch\WcsOrderQueue.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
