@@ -49,6 +49,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.ServiceModel" />
@@ -77,6 +78,9 @@
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
+    </Compile>
+    <Compile Include="Services\ProjectInstaller.vb">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Services\WmsHostService.Designer.vb">
       <DependentUpon>WmsHostService.vb</DependentUpon>

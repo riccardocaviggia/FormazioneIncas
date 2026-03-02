@@ -1,7 +1,6 @@
 ﻿Imports System.ServiceProcess
 Imports System.Reflection
 Imports System.Runtime.InteropServices
-Imports System.Linq
 
 Public Class ServiceHelper
     <DllImport("kernel32.dll", SetLastError:=True)>
