@@ -100,6 +100,7 @@
   <ItemGroup>
     <Compile Include="Clients\WcsDispatchClient.vb" />
     <Compile Include="Clients\WmsDispatchClient.vb" />
+    <Compile Include="Configuration\AppSettingsReader.vb" />
     <Compile Include="Configuration\WcsConfig.vb" />
     <Compile Include="Contracts\IBarcodeAuthorizationService.vb" />
     <Compile Include="Contracts\IHostGateway.vb" />
