@@ -1,3 +1,4 @@
+Imports System.Net
 Imports System.Net.Http
 Imports System.Text
 Imports System.Text.Json
@@ -30,6 +31,6 @@ Public Class WmsDispatchClient
             Dim response = Await Http.PostAsync(_endpoint, content, ct).ConfigureAwait(False)
             response.EnsureSuccessStatusCode()
             Return True
-            End If
+        End Using
     End Function
 End Class

@@ -1,5 +1,3 @@
-Imports System.Configuration
-
 Public Class WcsConfig
 
     Public Shared Function GetDispatchEndpoint() As String

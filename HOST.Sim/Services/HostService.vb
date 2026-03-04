@@ -1,4 +1,5 @@
 ﻿Imports System.Collections.Generic
+Imports System.Net.Http
 Imports System.Threading
 Imports System.Threading.Tasks
 Imports CommonSim
@@ -83,8 +84,7 @@ Public Class HostService
 
         Task.Run(Async Function()
                      Try
-                         Await _wmsDispatchClient.SendBatchAsync(dispatchList, CancellationToken.None).ConfigureAwait(False)
-                         _logger?.Info("HOST.DispatchBatchSent")
+                         Await SendBatchWithRetryAsync(dispatchList, 3)
                      Catch ex As Exception
                          _logger?.[Error]("HOST.DispatchBatchFailed", ex)
                      End Try
@@ -103,5 +103,27 @@ Public Class HostService
         End If
 
         Return 9999
+    End Function
+
+    Private Async Function SendBatchWithRetryAsync(batch As IReadOnlyList(Of DispatchOrderDto), attempts As Integer) As Task        ' retry backoff quando c'è l'invio di un batch
+        For attempt = 1 To attempts
+            Dim shouldDelay As Boolean = False
+
+            Try
+                Await _wmsDispatchClient.SendBatchAsync(batch, CancellationToken.None).ConfigureAwait(False)
+                _logger?.Log("INFO", "HOST.DispatchBatchSent", $"count={batch.Count};attempt={attempt}")
+                Return
+            Catch ex As HttpRequestException When attempt < attempts
+                shouldDelay = True
+                _logger?.Log("INFO", "HOST.DispatchBatchRetry", $"attempt={attempt};error={ex.Message}")
+            Catch ex As Exception
+                _logger?.[Error]("HOST.DispatchBatchFailed", ex)
+                Return
+            End Try
+
+            If shouldDelay Then
+                Await Task.Delay(TimeSpan.FromSeconds(2 * attempt)).ConfigureAwait(False)
+            End If
+        Next
     End Function
 End Class

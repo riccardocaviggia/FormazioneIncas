@@ -19,8 +19,8 @@ Public Class OrderDispatchRepository
                                    Optional location As String = DefaultLocation,
                                    Optional status As String = StatusInProgress) As Guid
 
-        Const sql = "
-            INSERT INTO Northwind.dbo.OrderDispatches (OrderID, Barcode, ContextCode, Location, Priority, Status)
+        Const insertDispatchSql = "
+            INSERT INTO dbo.OrderDispatches (OrderID, Barcode, ContextCode, Location, Priority, Status)
             OUTPUT INSERTED.Id
             VALUES (@OrderID, @Barcode, @ContextCode, @Location, @Priority, @Status);"
 
@@ -33,7 +33,7 @@ Public Class OrderDispatchRepository
             {"Status", status}
         }
 
-        Return DbHelper.ExecuteScalar(Of Guid)(_connectionString, sql, parameters)
+        Return DbHelper.ExecuteScalar(Of Guid)(_connectionString, insertDispatchSql, parameters)
     End Function
 
     Public Function InsertRejected(orderId As Integer,
@@ -42,8 +42,8 @@ Public Class OrderDispatchRepository
                                    priority As Integer,
                                    reason As String) As Guid
 
-        Const sql = "
-            INSERT INTO Northwind.dbo.RejectedOrders (OrderID, Barcode, Location, Priority, Reason)
+        Const insertRejectedSql = "
+            INSERT INTO dbo.RejectedOrders (OrderID, Barcode, Location, Priority, Reason)
             OUTPUT INSERTED.Id
             VALUES (@OrderID, @Barcode, @Location, @Priority, @Reason);"
 
@@ -55,6 +55,6 @@ Public Class OrderDispatchRepository
             {"Reason", reason}
         }
 
-        Return DbHelper.ExecuteScalar(Of Guid)(_connectionString, sql, parameters)
+        Return DbHelper.ExecuteScalar(Of Guid)(_connectionString, insertRejectedSql, parameters)
     End Function
 End Class

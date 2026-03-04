@@ -3,6 +3,7 @@ Imports System.Text
 Imports System.Text.Json
 Imports System.Threading
 Imports System.Threading.Tasks
+Imports System.IO
 Imports CommonSim
 
 Public Class WmsDispatchServer
@@ -24,7 +25,8 @@ Public Class WmsDispatchServer
                    logger As ServiceLogger)
         If String.IsNullOrWhiteSpace(prefix) Then Throw New ArgumentNullException(NameOf(prefix))
         _prefix = prefix
-        _processor = processor ?? Throw New ArgumentNullException(NameOf(processor))
+        If processor Is Nothing Then Throw New ArgumentNullException(NameOf(processor))
+        _processor = processor
         _logger = logger
     End Sub
 
@@ -53,7 +55,7 @@ Public Class WmsDispatchServer
                 Continue While
             End Try
 
-            _ = Task.Run(Function() HandleAsync(context), ct)
+            Task.Run(Function() HandleAsync(context), ct)
         End While
     End Function
 

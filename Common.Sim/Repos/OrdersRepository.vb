@@ -15,7 +15,7 @@ Public Class OrdersRepository
         Const sql = "
             SELECT TOP (@BatchSize) o.*
             FROM Northwind.dbo.Orders AS o WITH (READPAST)
-            LEFT JOIN Northwind.dbo.OrderDispatches AS od ON od.OrderID = o.OrderID
+            LEFT JOIN dbo.OrderDispatches AS od ON od.OrderID = o.OrderID
             WHERE o.ShippedDate IS NULL
               AND od.Id IS NULL
             ORDER BY o.OrderDate ASC, o.OrderID ASC;"

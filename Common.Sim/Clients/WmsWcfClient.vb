@@ -18,23 +18,27 @@ Public Class WmsWcfClient
 
     Private Function ProcessBarcode(barcodeValue As String, contextCode As String) As WmsResponse
         Dim binding As New BasicHttpBinding()
+        binding.Security.Mode = BasicHttpSecurityMode.Transport
+        binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.None
         Dim endpoint As New EndpointAddress(_endpointAddress)
-        Dim factory As New ChannelFactory(Of IWmsService)(binding, endpoint)
-        Dim channel As IWmsService = factory.CreateChannel()
+        Using factory As New ChannelFactory(Of IWmsService)(binding, endpoint)
+            Dim channel = factory.CreateChannel()
 
-        Try
-            Dim request As New WmsRequest With {
-                .BarcodeValue = barcodeValue,
-                .ContextCode = contextCode
-            }
-            Return channel.ProcessBarcode(request)
-        Finally
             Try
-                CType(channel, ICommunicationObject).Close()
-            Catch
-                CType(channel, ICommunicationObject).Abort()
+                Dim request As New WmsRequest With {
+                    .BarcodeValue = barcodeValue,
+                    .ContextCode = contextCode
+                }
+                Return channel.ProcessBarcode(request)
+            Finally
+                Try
+                    CType(channel, ICommunicationObject).Close()
+                Catch
+                    CType(channel, ICommunicationObject).Abort()
+                End Try
+                factory.Close()
             End Try
-            factory.Close()
-        End Try
+        End Using
+
     End Function
 End Class

@@ -1,5 +1,6 @@
 Imports System.Threading
 Imports System.Threading.Tasks
+Imports CommonSim
 
 Public Interface IOrderDeliveryChannel
     Function SendAsync(order As DispatchOrderDto, ct As CancellationToken) As Task

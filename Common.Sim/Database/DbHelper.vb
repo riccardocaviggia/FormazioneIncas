@@ -1,5 +1,5 @@
 ﻿Imports System.Data.SqlClient
-Imports System.Runtime.InteropServices
+Imports System.Data.SqlTypes
 
 Public Module DbHelper
     Public Function ExecuteReader(Of T)(
@@ -24,11 +24,9 @@ Public Module DbHelper
         Return results
     End Function
 
-    Public Function ExecuteScalar(Of T)(
-        connectionString As String,
-        sql As String,
-        Optional parameters As Dictionary(Of String, Object) = Nothing) As T
-
+    Public Function ExecuteScalar(Of T)(connectionString As String,
+                                        sql As String,
+                                        Optional parameters As Dictionary(Of String, Object) = Nothing) As T
         Using conn As New SqlConnection(connectionString)
             Using cmd As New SqlCommand(sql, conn)
                 AddParameters(cmd, parameters)
@@ -37,10 +35,49 @@ Public Module DbHelper
                 If result Is Nothing OrElse result Is DBNull.Value Then
                     Return Nothing
                 End If
-                Return CType(result, T)
+                Return ConvertScalarResult(Of T)(result)
             End Using
         End Using
+    End Function
 
+    Private Function ConvertScalarResult(Of T)(value As Object) As T
+        Dim targetType = GetType(T)
+        Dim underlying = Nullable.GetUnderlyingType(targetType)
+        Dim effectiveType = If(underlying, targetType)
+
+        If effectiveType Is GetType(Guid) Then
+            Dim guidValue As Guid
+
+            If TypeOf value Is Guid Then
+                guidValue = DirectCast(value, Guid)
+            ElseIf TypeOf value Is SqlGuid Then
+                guidValue = DirectCast(value, SqlGuid).Value
+            ElseIf TypeOf value Is Byte() Then
+                Dim bytes = DirectCast(value, Byte())
+                If bytes.Length <> 16 Then
+                    Throw New InvalidCastException("Array di byte non valido per Guid.")
+                End If
+                guidValue = New Guid(bytes)
+            ElseIf TypeOf value Is String Then
+                Dim s = DirectCast(value, String)
+                If Not Guid.TryParse(s, guidValue) Then
+                    Throw New InvalidCastException($"Impossibile convertire la stringa '{s}' in Guid.")
+                End If
+            Else
+                Throw New InvalidCastException($"Impossibile convertire il valore di tipo {value.GetType().FullName} in Guid.")
+            End If
+
+            Dim boxed As Object = If(underlying Is Nothing,
+                                     CType(guidValue, Object),
+                                     CType(New Nullable(Of Guid)(guidValue), Object))
+            Return CType(boxed, T)
+        End If
+
+        Dim converted = Convert.ChangeType(value, effectiveType)
+        Dim boxedResult As Object = If(underlying Is Nothing,
+                                       converted,
+                                       Activator.CreateInstance(targetType, converted))
+        Return CType(boxedResult, T)
     End Function
 
     Private Sub AddParameters(cmd As SqlCommand, parameters As Dictionary(Of String, Object))
