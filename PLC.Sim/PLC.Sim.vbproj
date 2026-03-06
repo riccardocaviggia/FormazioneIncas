@@ -102,8 +102,7 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Communication\IPlcChannel.vb" />
-    <Compile Include="Communication\PlcTcpChannel.vb" />
+    <Compile Include="Communication\PlcTcpServer.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
@@ -125,7 +124,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Communication\PlcTcpClient.vb" />
     <Compile Include="Services\ProjectInstaller.vb">
       <SubType>Component</SubType>
     </Compile>

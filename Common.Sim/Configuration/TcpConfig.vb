@@ -1,19 +1,19 @@
 ﻿Imports System.Configuration
 
 Public Module TcpConfig
-    Public Function GetTcpPort() As Integer
+    Public Function GetPlcPort() As Integer
         Dim port As Integer
-        If Integer.TryParse(ConfigurationManager.AppSettings("TcpPort"), port) AndAlso port > 0 AndAlso port < 65536 Then
+        If Integer.TryParse(ConfigurationManager.AppSettings("PlcTcpPort"), port) AndAlso port > 0 AndAlso port < 65536 Then
             Return port
         End If
 
-        Throw New ConfigurationErrorsException("WcsTcpServerPort is not configured correctly. It must be a valid integer between 1 and 65535.")
+        Throw New ConfigurationErrorsException("PlcTcpPort is not configured. It must be an integer between 1 and 65535.")
     End Function
 
-    Public Function GetTcpHost() As String
-        Dim host = ConfigurationManager.AppSettings("TcpHost")
+    Public Function GetPlcHost() As String
+        Dim host = ConfigurationManager.AppSettings("PlcTcpHost")
         If String.IsNullOrEmpty(host) Then
-            Throw New ConfigurationErrorsException("WcsTcpServerHost is not configured.")
+            Throw New ConfigurationErrorsException("PlcTcpHost is not configured.")
         End If
         Return host.Trim()
     End Function

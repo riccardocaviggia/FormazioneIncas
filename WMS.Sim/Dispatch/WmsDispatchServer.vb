@@ -76,7 +76,7 @@ Public Class WmsDispatchServer
             ' >>> log temporaneo per capire se qualcosa arriva
             _logger?.Info("WMS.DispatchAccept")
 
-            Task.Run(Function() HandleAsync(context), ct)
+            Await Task.Run(Function() HandleAsync(context), ct)
         End While
     End Function
 

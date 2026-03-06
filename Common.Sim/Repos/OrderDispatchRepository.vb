@@ -5,6 +5,7 @@ Public Class OrderDispatchRepository
     Public Const StatusInProgress As String = "IN_PROGRESS"
     Public Const StatusPending As String = "PENDING"
     Public Const StatusFailed As String = "FAILED"
+    Public Const StatusCompleted As String = "COMPLETED"
 
     Private ReadOnly _connectionString As String
 

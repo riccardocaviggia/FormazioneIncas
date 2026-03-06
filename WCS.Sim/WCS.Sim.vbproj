@@ -102,7 +102,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Dispatch\IOrderDeliveryChannel.vb" />
-    <Compile Include="Dispatch\LoggingOrderDeliveryChannel.vb" />
+    <Compile Include="Dispatch\PlcTcpDeliveryChannel.vb" />
     <Compile Include="Dispatch\WcsDispatchServer.vb" />
     <Compile Include="Dispatch\WcsOrderDispatcher.vb" />
     <Compile Include="Dispatch\WcsOrderQueue.vb" />

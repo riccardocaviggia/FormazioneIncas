@@ -59,7 +59,7 @@ Public Class WcsDispatchServer
                 Continue While
             End Try
 
-            Task.Run(Function() HandleAsync(context), ct)
+            Await Task.Run(Function() HandleAsync(context), ct)
         End While
     End Function
 
