@@ -49,7 +49,7 @@ Public Class OrderPollingService
             Dim orders = _repository.FetchBatch(_batchSize)
             If orders.Count > 0 Then
                 _logger?.Log("INFO", "HOST.OrdersFetched", $"Batch={orders.Count}")
-                _onBatch(orders)
+                _onBatch(orders) 'ForwardOrders
             End If
         Catch ex As Exception
             _logger?.[Error]("HOST.OrderPollingError", ex)

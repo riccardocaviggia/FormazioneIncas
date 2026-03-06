@@ -4,6 +4,7 @@ Public Class OrderDispatchRepository
     Public Const DefaultLocation As String = "Z0000"
     Public Const StatusInProgress As String = "IN_PROGRESS"
     Public Const StatusPending As String = "PENDING"
+    Public Const StatusFailed As String = "FAILED"
 
     Private ReadOnly _connectionString As String
 
@@ -17,7 +18,7 @@ Public Class OrderDispatchRepository
                                    contextCode As String,
                                    priority As Integer,
                                    Optional location As String = DefaultLocation,
-                                   Optional status As String = StatusInProgress) As Guid
+                                   Optional status As String = StatusPending) As Guid
 
         Const insertDispatchSql = "
             INSERT INTO dbo.OrderDispatches (OrderID, Barcode, ContextCode, Location, Priority, Status)
@@ -57,4 +58,19 @@ Public Class OrderDispatchRepository
 
         Return DbHelper.ExecuteScalar(Of Guid)(_connectionString, insertRejectedSql, parameters)
     End Function
+
+    Public Sub UpdateDispatch(dispatchId As Guid, location As String, status As String)
+        Const sql = "
+            UPDATE dbo.OrderDispatches
+            SET Location = @Location,
+                Status = @Status,
+                UpdatedAt = GETDATE()
+            WHERE Id = @Id;"
+        Dim parameters = New Dictionary(Of String, Object) From {
+            {"Id", dispatchId},
+            {"Location", location},
+            {"Status", status}
+        }
+        DbHelper.ExecuteNonQuery(_connectionString, sql, parameters)
+    End Sub
 End Class

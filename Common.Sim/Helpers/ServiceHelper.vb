@@ -1,6 +1,7 @@
 ﻿Imports System.ServiceProcess
 Imports System.Reflection
 Imports System.Runtime.InteropServices
+Imports System.Threading
 
 Public Class ServiceHelper
     <DllImport("kernel32.dll", SetLastError:=True)>
@@ -23,8 +24,14 @@ Public Class ServiceHelper
             Dim onStart = service.GetType().GetMethod("OnStart", BindingFlags.Instance Or BindingFlags.NonPublic)
             Dim realArgs = Environment.GetCommandLineArgs().Skip(1).ToArray()
             onStart.Invoke(service, New Object() {realArgs})
-            Console.WriteLine("Service is running... Press any key to stop.")
-            Console.ReadKey()
+
+            Dim stopEvent = New ManualResetEvent(False)
+            AddHandler Console.CancelKeyPress, Sub(sender, e)
+                                                   e.Cancel = True
+                                                   stopEvent.Set()
+                                               End Sub
+            Console.WriteLine("Service is running... Press Ctrl+C to stop.")
+            stopEvent.WaitOne()
 
             Dim onStop = service.GetType().GetMethod("OnStop", BindingFlags.Instance Or BindingFlags.NonPublic)
             onStop.Invoke(service, Nothing)

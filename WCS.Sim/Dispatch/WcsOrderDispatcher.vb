@@ -22,6 +22,8 @@ Public Class WcsOrderDispatcher
         _logger = logger
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- Worker in background che consuma la coda e invia gli ordini al canale PLC
     Public Sub Start()
         If _worker IsNot Nothing Then Throw New InvalidOperationException("Dispatcher already started.")
         _cts = New CancellationTokenSource()

@@ -1,3 +1,4 @@
+Imports System.Net
 Imports System.Net.Http
 Imports System.Text
 Imports System.Text.Json
@@ -5,7 +6,13 @@ Imports System.Threading
 Imports System.Threading.Tasks
 
 Public Class WcsDispatchClient
-    Private Shared ReadOnly Http As New HttpClient()
+    Private Shared ReadOnly Http As New HttpClient(
+        New HttpClientHandler() With {
+            .UseProxy = False,      ' disabilita il proxy
+            .ServerCertificateCustomValidationCallback =
+                Function(msg, cert, chain, errors) True   ' accetta certificati autofirmati
+        })
+
     Private Shared ReadOnly JsonOptions As New JsonSerializerOptions With {
         .PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         .PropertyNameCaseInsensitive = True
@@ -18,6 +25,8 @@ Public Class WcsDispatchClient
         _endpoint = New Uri(endpoint, UriKind.Absolute)
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- Invia il batch al WCS e attende la risposta
     Public Async Function SendAsync(orders As IReadOnlyList(Of DispatchOrderDto),
                                     ct As CancellationToken) As Task
         If orders Is Nothing OrElse orders.Count = 0 Then Return

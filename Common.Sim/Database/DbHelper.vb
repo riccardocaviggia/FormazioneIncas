@@ -40,6 +40,18 @@ Public Module DbHelper
         End Using
     End Function
 
+    Public Sub ExecuteNonQuery(connectionString As String,          ' Modifica il db senza restituire risultato
+                                        sql As String,
+                                        Optional parameters As Dictionary(Of String, Object) = Nothing)
+        Using conn As New SqlConnection(connectionString)
+            Using cmd As New SqlCommand(sql, conn)
+                AddParameters(cmd, parameters)
+                conn.Open()
+                cmd.ExecuteNonQuery()
+            End Using
+        End Using
+    End Sub
+
     Private Function ConvertScalarResult(Of T)(value As Object) As T
         Dim targetType = GetType(T)
         Dim underlying = Nullable.GetUnderlyingType(targetType)

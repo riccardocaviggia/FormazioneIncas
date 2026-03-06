@@ -35,7 +35,8 @@ Public Class WcsDispatchServer
         If _listener IsNot Nothing Then Throw New InvalidOperationException("WCS dispatch server already running.")
 
         _listener = New HttpListener()
-        _listener.Prefixes.Add(_prefix)
+        Dim listenerPrefix = _prefix.Replace("://localhost", "://+")
+        _listener.Prefixes.Add(listenerPrefix)
         _listener.Start()
 
         _cts = New CancellationTokenSource()
@@ -43,6 +44,8 @@ Public Class WcsDispatchServer
         _logger?.Info($"WCS.DispatchServerStarted[{_prefix}]")
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- LOOP DI ASCOLTO: accetta le richieste in arrivo e le gestisce HandleSync, esce dal loop se è richiesto lo stop
     Private Async Function ListenAsync(ct As CancellationToken) As Task
         While Not ct.IsCancellationRequested
             Dim context As HttpListenerContext = Nothing
@@ -60,6 +63,9 @@ Public Class WcsDispatchServer
         End While
     End Function
 
+
+    '-------------------------------------------------------------------------------
+    '- GESTIONE RICHIESTA: se è una POST a /dispatch, legge il body, deserializza e mette gli ordini in coda. Altrimenti risponde con 404
     Private Async Function HandleAsync(context As HttpListenerContext) As Task
         Using context.Response
             If context.Request.HttpMethod <> "POST" OrElse

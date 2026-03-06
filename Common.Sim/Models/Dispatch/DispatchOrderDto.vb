@@ -1,6 +1,7 @@
 Imports System
 
 Public Class DispatchOrderDto
+    Public Property DispatchId As Guid
     Public Property OrderId As Integer
     Public Property Barcode As String
     Public Property ContextCode As String

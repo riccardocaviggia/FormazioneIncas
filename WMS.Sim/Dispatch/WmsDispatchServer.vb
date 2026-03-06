@@ -34,18 +34,36 @@ Public Class WmsDispatchServer
         If _listener IsNot Nothing Then Throw New InvalidOperationException("Dispatch server already running.")
 
         _listener = New HttpListener()
-        _listener.Prefixes.Add(_prefix)
-        _listener.Start()
+        Dim listenerPrefix = _prefix.Replace("://localhost", "://+")
+        _listener.Prefixes.Add(listenerPrefix)
+        Try
+            _listener.Start()
+            _logger?.Info($"WMS.DispatchServerStarted[{_prefix}]")
+        Catch ex As HttpListenerException
+            _logger?.[Error]($"WMS.DispatchServerStartError[{_prefix}]", ex)
+            Throw
+        End Try
 
         _cts = New CancellationTokenSource()
         _listenerTask = Task.Run(Function() ListenAsync(_cts.Token))
-        _logger?.Info($"WMS.DispatchServerStarted[{_prefix}]")
+
+        '- Diagnostica: verifica che il task sia effettivamente attivo dopo 500ms
+        Task.Delay(500).ContinueWith(Sub(t)
+                                         If _listenerTask.IsFaulted Then
+                                             _logger?.[Error]("WMS.ListenTaskFaulted", _listenerTask.Exception?.Flatten())
+                                         ElseIf _listenerTask.IsCompleted Then
+                                             _logger?.Log("WARN", "WMS.ListenTaskEndedEarly", "Il task di ascolto si è concluso prematuramente")
+                                         Else
+                                             _logger?.Info("WMS.ListenTaskRunning")
+                                         End If
+                                     End Sub)
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- LOOP DI ASCOLTO: accetta le richieste http in arrivo e le invia a HandleAsync, esce dal loop se è richiesto lo stop
     Private Async Function ListenAsync(ct As CancellationToken) As Task
         While Not ct.IsCancellationRequested
             Dim context As HttpListenerContext = Nothing
-
             Try
                 context = Await _listener.GetContextAsync().ConfigureAwait(False)
             Catch ex As HttpListenerException When ct.IsCancellationRequested
@@ -55,10 +73,15 @@ Public Class WmsDispatchServer
                 Continue While
             End Try
 
+            ' >>> log temporaneo per capire se qualcosa arriva
+            _logger?.Info("WMS.DispatchAccept")
+
             Task.Run(Function() HandleAsync(context), ct)
         End While
     End Function
 
+    '-------------------------------------------------------------------------------
+    '- GESTIONE RICHIESTA: se è una POST a /dispatch, deserializza il body e lo passa al processor, altrimenti risponde con 404
     Private Async Function HandleAsync(context As HttpListenerContext) As Task
         Using context.Response
             If context.Request.HttpMethod <> "POST" OrElse

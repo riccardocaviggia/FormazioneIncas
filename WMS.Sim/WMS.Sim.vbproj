@@ -102,9 +102,6 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Application\BarcodeMessageHandler.vb" />
-    <Compile Include="Application\IWmsBarcodeHandler.vb" />
-    <Compile Include="Application\WmsBarcodeHandler.vb" />
     <Compile Include="Dispatch\LocationAllocator.vb" />
     <Compile Include="Dispatch\WmsDispatchProcessor.vb" />
     <Compile Include="Dispatch\WmsDispatchServer.vb" />
@@ -121,13 +118,6 @@
     <Compile Include="Services\WmsHostService.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Providers\WmsInstanceProvider.vb" />
-    <Compile Include="Services\WmsService.vb">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Services\WmsService.Designer.vb">
-      <DependentUpon>WmsService.vb</DependentUpon>
-    </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Resources.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -139,7 +129,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Providers\WmsServiceBehaviour.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">
@@ -168,6 +157,7 @@
       <Name>Common.Sim</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Import Project="..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

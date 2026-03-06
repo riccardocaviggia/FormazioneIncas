@@ -102,27 +102,16 @@
     <Compile Include="Clients\WmsDispatchClient.vb" />
     <Compile Include="Configuration\AppSettingsReader.vb" />
     <Compile Include="Configuration\WcsConfig.vb" />
-    <Compile Include="Contracts\IBarcodeAuthorizationService.vb" />
-    <Compile Include="Contracts\IHostGateway.vb" />
-    <Compile Include="Contracts\IWcsMessageHandler.vb" />
-    <Compile Include="Contracts\IWmsClient.vb" />
     <Compile Include="Logging\ServiceLogger.vb" />
     <Compile Include="Logging\ServiceLogRepository.vb" />
-    <Compile Include="Messaging\AckMessage.vb" />
-    <Compile Include="Messaging\WcsInboundMessage.vb" />
     <Compile Include="Models\Dispatch\DispatchBatchRequest.vb" />
     <Compile Include="Models\Dispatch\DispatchBatchResponse.vb" />
     <Compile Include="Models\Dispatch\DispatchOrderDto.vb" />
     <Compile Include="Models\Logging\ServiceLogEntry.vb" />
     <Compile Include="Models\Orders\OrderRecord.vb" />
-    <Compile Include="Repos\BarcodeRepository.vb" />
-    <Compile Include="Models\Barcode\BarcodeResponse.vb" />
     <Compile Include="Database\ConnectionStringProvider.vb" />
-    <Compile Include="Models\ContextRecord.vb" />
     <Compile Include="Database\DbHelper.vb" />
     <Compile Include="Configuration\HostConfig.vb" />
-    <Compile Include="Clients\HostHttpClient.vb" />
-    <Compile Include="Interfaces\IWmsService.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -142,12 +131,8 @@
     <Compile Include="Helpers\ServiceHelper.vb" />
     <Compile Include="Configuration\TcpConfig.vb" />
     <Compile Include="Configuration\WmsConfig.vb" />
-    <Compile Include="Models\WMS\WmsRequest.vb" />
-    <Compile Include="Models\WMS\WmsResponse.vb" />
-    <Compile Include="Clients\WmsWcfClient.vb" />
     <Compile Include="Repos\OrderDispatchRepository.vb" />
     <Compile Include="Repos\OrdersRepository.vb" />
-    <Compile Include="Services\BarcodeAuthorizationService.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">

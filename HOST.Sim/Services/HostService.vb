@@ -1,4 +1,5 @@
 ﻿Imports System.Collections.Generic
+Imports System.Net
 Imports System.Net.Http
 Imports System.Threading
 Imports System.Threading.Tasks
@@ -7,7 +8,6 @@ Imports CommonSim
 Public Class HostService
     Private Const DefaultContextCode As String = "INBOUND"
 
-    Private _server As HostHttpServer
     Private _logger As ServiceLogger
     Private _ordersPoller As OrderPollingService
     Private _dispatchRepository As OrderDispatchRepository
@@ -15,19 +15,48 @@ Public Class HostService
 
     Protected Overrides Sub OnStart(ByVal args() As String)
         Dim cs As String = ConnectionStringProvider.GetConnectionString(args)
-        Dim endpoint As String = HostConfig.GetHostEndpoint()
-        Dim repository As New BarcodeRepository(cs)
-        Dim authorizationService As IBarcodeAuthorizationService = New BarcodeAuthorizationService(repository)
 
         _logger = New ServiceLogger(cs, "HOST.Sim", Sub()
                                                     End Sub)
 
-        _server = New HostHttpServer(endpoint, authorizationService, logger:=_logger)
-        _server.Start()
+        _logger.Info("HOST.OnStart.START")
 
-        Dim ordersRepository As New OrdersRepository(cs)
-        _dispatchRepository = New OrderDispatchRepository(cs)
+        '-------------------------------------------------------------------------------
+        '- Webservice per passaggio ordini da HOST a Warehouse (WMS)
         _wmsDispatchClient = New WmsDispatchClient(WmsConfig.GetDispatchEndpoint())
+
+        '-------------------------------------------------------------------------------
+        '- Verifica che l'endpoint di dispatch sia raggiungibile prima di partire con il polling degli ordini,
+        'altrimenti si rischia una race condition: l'HOST inizia a mandare i dati quando il WMS non è ancora pronto
+        Dim deadline = DateTime.UtcNow.AddSeconds(30)
+        Do
+            Try
+                Using req As New HttpRequestMessage(
+                        HttpMethod.Head,
+                        WmsConfig.GetDispatchEndpoint())
+                    Dim handler As New HttpClientHandler() With {
+                        .ServerCertificateCustomValidationCallback = Function(m, c, ch, e) True
+                        }
+                    Using client As New HttpClient(handler)
+                        Dim res = client.SendAsync(req).GetAwaiter().GetResult()
+                        If res.StatusCode = HttpStatusCode.MethodNotAllowed OrElse
+                           res.StatusCode = HttpStatusCode.NotFound OrElse
+                           res.IsSuccessStatusCode Then
+                            Exit Do
+                        End If
+                    End Using
+                End Using
+            Catch
+            End Try
+            If DateTime.UtcNow > deadline Then Exit Do
+            Threading.Thread.Sleep(500)
+        Loop
+
+        '-------------------------------------------------------------------------------
+        '- TASK RICEZIONE ORDINI (prende gli ordini da Nortwind e li porta su Warehouse)
+        'e poi li manda (ForwardOrders) al WMS tramite _wmsDispatchClient.
+        Dim ordersRepository As New OrdersRepository(cs) 'cnn db Northwind
+        _dispatchRepository = New OrderDispatchRepository(cs) 'cnn db Warehouse
 
         _ordersPoller = New OrderPollingService(
             ordersRepository,
@@ -36,22 +65,20 @@ Public Class HostService
             AddressOf ForwardOrders,
             _logger)
         _ordersPoller.Start()
+        '-------------------------------------------------------------------------------
 
-        _logger.Info("HOST.Started")
+        _logger.Info("HOST.OnStart.END")
     End Sub
 
     Protected Overrides Sub OnStop()
         _ordersPoller?.StopPolling()
         _ordersPoller = Nothing
 
-        If _server IsNot Nothing Then
-            _server.Stop()
-            _server = Nothing
-        End If
-
         _logger?.Info("HOST.Stopped")
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- Crea dispatch per ogni ordine su WareHouseDb e costruisce i DTO
     Private Sub ForwardOrders(orders As IReadOnlyList(Of OrderRecord))
         If orders Is Nothing OrElse orders.Count = 0 Then Return
 
@@ -64,12 +91,14 @@ Public Class HostService
             Dim orderDate = order.GetValue(Of DateTime?)("OrderDate")
             Dim requiredDate = order.GetValue(Of DateTime?)("RequiredDate")
 
-            Dim dispatchId = _dispatchRepository.InsertDispatch(orderId, barcode, DefaultContextCode, priority)
+            'Inserimento su WareHouseDb (tabella OrderDispatches) con stato "Pending" (da processare) e recupero del DispatchId generato
+            Dim dispatchId = _dispatchRepository.InsertDispatch(orderId, barcode, DefaultContextCode, priority, status:=OrderDispatchRepository.StatusPending)
 
             _logger?.Log("INFO", "HOST.DispatchCreated",
                          $"DispatchId={dispatchId};OrderID={orderId};Priority={priority}")
 
             dispatchList.Add(New DispatchOrderDto With {
+                .DispatchId = dispatchId,
                 .OrderId = orderId,
                 .Barcode = barcode,
                 .ContextCode = DefaultContextCode,
@@ -105,6 +134,8 @@ Public Class HostService
         Return 9999
     End Function
 
+    '-------------------------------------------------------------------------------
+    '- Retry backoff quando c'è l'invio di un batch: se dopo 3 tentativi il WMS non risponde, il batch viene marcato 'FAILED'
     Private Async Function SendBatchWithRetryAsync(batch As IReadOnlyList(Of DispatchOrderDto), attempts As Integer) As Task        ' retry backoff quando c'è l'invio di un batch
         For attempt = 1 To attempts
             Dim shouldDelay As Boolean = False
@@ -125,5 +156,21 @@ Public Class HostService
                 Await Task.Delay(TimeSpan.FromSeconds(2 * attempt)).ConfigureAwait(False)
             End If
         Next
+
+        ' tutti i tentativi esauriti senza successo
+        _logger?.Log("WARN", "HOST.DispatchBatchAbandoned", $"count={batch.Count}")
+        MarkBatchFailed(batch)
     End Function
+
+    '-------------------------------------------------------------------------------
+    ' il batch viene marcato come 'FAILED'
+    Private Sub MarkBatchFailed(batch As IReadOnlyList(Of DispatchOrderDto))
+        For Each dto In batch
+            Try
+                _dispatchRepository.UpdateDispatch(dto.DispatchId, dto.Location, OrderDispatchRepository.StatusFailed)
+            Catch ex As Exception
+                _logger?.[Error]("HOST.DispatchMarkFailedError", ex)
+            End Try
+        Next
+    End Sub
 End Class

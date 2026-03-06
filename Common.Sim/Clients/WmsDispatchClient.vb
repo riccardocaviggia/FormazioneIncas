@@ -6,7 +6,13 @@ Imports System.Threading
 Imports System.Threading.Tasks
 
 Public Class WmsDispatchClient
-    Private Shared ReadOnly Http As New HttpClient()
+    Private Shared ReadOnly Http As New HttpClient(
+        New HttpClientHandler() With {
+            .UseProxy = False,      ' disabilita il proxy
+            .ServerCertificateCustomValidationCallback =
+                Function(msg, cert, chain, errors) True   ' accetta certificati autofirmati
+        })
+
     Private Shared ReadOnly JsonOptions As New JsonSerializerOptions With {
         .PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         .PropertyNameCaseInsensitive = True
@@ -19,6 +25,8 @@ Public Class WmsDispatchClient
         _endpoint = New Uri(endpoint, UriKind.Absolute)
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- Invia il batch al WMS e attende la risposta
     Public Async Function SendBatchAsync(orders As IReadOnlyList(Of DispatchOrderDto),
                                          ct As CancellationToken) As Task(Of Boolean)
         If orders Is Nothing OrElse orders.Count = 0 Then
