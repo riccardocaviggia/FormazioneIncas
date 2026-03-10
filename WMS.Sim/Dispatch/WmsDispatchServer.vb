@@ -73,9 +73,6 @@ Public Class WmsDispatchServer
                 Continue While
             End Try
 
-            ' >>> log temporaneo per capire se qualcosa arriva
-            _logger?.Info("WMS.DispatchAccept")
-
             Await Task.Run(Function() HandleAsync(context), ct)
         End While
     End Function

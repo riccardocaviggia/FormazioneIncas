@@ -61,41 +61,17 @@ Public Class PlcTcpDeliveryChannel
     End Sub
 
     '-------------------------------------------------------------------------------
-    '- Costruisce l'ordine, lo invia al PLC e attende l'ACK con timeout
+    '- Invia l'ordine al PLC e attende l'ACK. Se arriva l'ACK, aggiorna lo stato dell'ordine
     Public Async Function SendAsync(order As DispatchOrderDto, ct As CancellationToken) As Task Implements IOrderDeliveryChannel.SendAsync
-        Dim msg = New PlcOrderMessage With {
-            .DispatchId = order.DispatchId,
-            .OrderId = order.OrderId,
-            .Barcode = order.Barcode,
-            .Location = order.Location,
-            .Priority = order.Priority
-        }
-
         Try
+            Dim msg = BuildOrder(order)
             Await _writer.WriteLineAsync(JsonSerializer.Serialize(msg, JsonOptions)).ConfigureAwait(False)
             _logger?.Info($"WCS.OrderSentToPlc[OrderId={order.OrderId};Location={order.Location}]")
 
             '- Attesa ACK con timeout
-            Dim readTask = _reader.ReadLineAsync()
-            Dim timeoutTask = Task.Delay(_ackTimeout, ct)
-            Dim completed = Await Task.WhenAny(readTask, timeoutTask).ConfigureAwait(False)
-
-            If completed Is timeoutTask Then
-                _dispatchRepository.UpdateDispatch(order.DispatchId, order.Location, OrderDispatchRepository.StatusFailed)
-                _logger?.Log("WARN", "WCS.PlcAckTimeout", $"OrderId={order.OrderId}")
-                Return
-            End If
-
-            Dim ackLine = Await readTask.ConfigureAwait(False)
-            If ackLine Is Nothing Then Throw New IOException("PLC ha chiuso la connessione.")
-
-            Dim ack = JsonSerializer.Deserialize(Of PlcAckMessage)(ackLine, JsonOptions)
-            If ack?.Ok Then
-                _dispatchRepository.UpdateDispatch(order.DispatchId, order.Location, OrderDispatchRepository.StatusCompleted)
-                _logger?.Info($"WCS.OrderCompleted[OrderId={order.OrderId}]")
-            Else
-                _dispatchRepository.UpdateDispatch(order.DispatchId, order.Location, OrderDispatchRepository.StatusFailed)
-                _logger?.Log("WARN", "WCS.OrderFailed", $"OrderId={order.OrderId};Reason={ack?.Reason}")
+            Dim ackline = Await WaitForAckAsync(order, ct).ConfigureAwait(False)
+            If ackline IsNot Nothing Then
+                ProcessAck(order, ackline)
             End If
 
         Catch ex As Exception When Not TypeOf ex Is OperationCanceledException
@@ -104,6 +80,50 @@ Public Class PlcTcpDeliveryChannel
             Throw
         End Try
     End Function
+
+    '-------------------------------------------------------------------------------
+    '- Costruisce l'ordine da inviare al PLC
+    Private Shared Function BuildOrder(order As DispatchOrderDto)
+        Return New PlcOrderMessage With {
+            .DispatchId = order.DispatchId,
+            .OrderId = order.OrderId,
+            .Barcode = order.Barcode,
+            .Location = order.Location,
+            .Priority = order.Priority
+        }
+    End Function
+
+    '-------------------------------------------------------------------------------
+    '- Attende l'ACK dal PLC con timeout. Se scade, restituisce Nothing
+    Private Async Function WaitForAckAsync(order As DispatchOrderDto, ct As CancellationToken) As Task(Of String)
+        Dim readTask = _reader.ReadLineAsync()
+        Dim timeoutTask = Task.Delay(_ackTimeout, ct)
+        Dim completed = Await Task.WhenAny(readTask, timeoutTask).ConfigureAwait(False)
+
+        If completed Is timeoutTask Then
+            _dispatchRepository.UpdateDispatch(order.DispatchId, order.Location, OrderDispatchRepository.StatusFailed)
+            _logger?.Log("WARN", "WCS.PlcAckTimeout", $"OrderId={order.OrderId}")
+            Return Nothing
+        End If
+
+        Dim ackLine = Await readTask.ConfigureAwait(False)
+        If ackLine Is Nothing Then Throw New IOException("PLC connection has been closed.")
+
+        Return ackLine
+    End Function
+
+    '-------------------------------------------------------------------------------
+    '- Deserializza l'ack e aggiorna lo stato dell'ordine
+    Private Sub ProcessAck(order As DispatchOrderDto, ackline As String)
+        Dim ack = JsonSerializer.Deserialize(Of PlcAckMessage)(ackline, JsonOptions)
+        If ack?.Ok Then
+            _dispatchRepository.UpdateDispatch(order.DispatchId, order.Location, OrderDispatchRepository.StatusCompleted)
+            _logger?.Info($"WCS.OrderCompleted[OrderId={order.OrderId}]")
+        Else
+            _dispatchRepository.UpdateDispatch(order.DispatchId, order.Location, OrderDispatchRepository.StatusFailed)
+            _logger?.Log("WARN", "WCS.OrderFailed", $"OrderId={order.OrderId};Reason={ack?.Reason}")
+        End If
+    End Sub
 
     Public Sub Disconnect()
         Try

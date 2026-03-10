@@ -17,10 +17,6 @@ Public Class ServiceLogger
         Write("INFO", messageType, Nothing, correlationId, barcode, contextCode)
     End Sub
 
-    Public Sub Warn(messageType As String, Optional correlationId As String = Nothing, Optional barcode As String = Nothing, Optional contextCode As String = Nothing, Optional details As String = Nothing)
-        Write("WARN", messageType, details, correlationId, barcode, contextCode)
-    End Sub
-
     Public Sub [Error](messageType As String, exception As Exception, Optional correlationId As String = Nothing, Optional barcode As String = Nothing, Optional contextCode As String = Nothing)
         Write("ERROR", messageType, exception?.ToString(), correlationId, barcode, contextCode)
     End Sub

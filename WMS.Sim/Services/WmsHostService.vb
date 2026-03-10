@@ -16,10 +16,8 @@ Public Class WmsHostService
         _logger = New ServiceLogger(connectionString, "WMS.Sim", Sub()
                                                                  End Sub)
 
-        ' WCF barcode service — indipendente dal dispatch server
-
-
-        ' HTTP dispatch server — indipendente dal WCF host
+        '-------------------------------------------------------------------------------
+        '- HTTP dispatch server
         Try
             Dim allocator = New LocationAllocator()
             Dim wcsClient = New WcsDispatchClient(WcsConfig.GetDispatchEndpoint())
@@ -30,7 +28,7 @@ Public Class WmsHostService
             _logger.Info("WMS.DispatchServerStarted")
         Catch ex As Exception
             _logger?.[Error]("WMS.DispatchServerStartError", ex)
-            Throw ' il dispatch è critico: se non parte, il servizio non ha senso
+            Throw '- il dispatch è critico: se non parte, il servizio non ha senso
         End Try
 
         _logger.Info("WMS.Started")

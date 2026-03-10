@@ -10,6 +10,7 @@ Public Class HostService
 
     Private _logger As ServiceLogger
     Private _ordersPoller As OrderPollingService
+    Private _ordersRepository As OrdersRepository
     Private _dispatchRepository As OrderDispatchRepository
     Private _wmsDispatchClient As WmsDispatchClient
 
@@ -55,17 +56,16 @@ Public Class HostService
         '-------------------------------------------------------------------------------
         '- TASK RICEZIONE ORDINI (prende gli ordini da Nortwind e li porta su Warehouse)
         'e poi li manda (ForwardOrders) al WMS tramite _wmsDispatchClient.
-        Dim ordersRepository As New OrdersRepository(cs) 'cnn db Northwind
+        _ordersRepository = New OrdersRepository(cs) 'cnn db Northwind
         _dispatchRepository = New OrderDispatchRepository(cs) 'cnn db Warehouse
 
         _ordersPoller = New OrderPollingService(
-            ordersRepository,
+            _ordersRepository,
             HostConfig.GetOrdersPollingInterval(),
             HostConfig.GetOrdersBatchSize(),
             AddressOf ForwardOrders,
             _logger)
         _ordersPoller.Start()
-        '-------------------------------------------------------------------------------
 
         _logger.Info("HOST.OnStart.END")
     End Sub
@@ -136,7 +136,7 @@ Public Class HostService
 
     '-------------------------------------------------------------------------------
     '- Retry backoff quando c'è l'invio di un batch: se dopo 3 tentativi il WMS non risponde, il batch viene marcato 'FAILED'
-    Private Async Function SendBatchWithRetryAsync(batch As IReadOnlyList(Of DispatchOrderDto), attempts As Integer) As Task        ' retry backoff quando c'è l'invio di un batch
+    Private Async Function SendBatchWithRetryAsync(batch As IReadOnlyList(Of DispatchOrderDto), attempts As Integer) As Task
         For attempt = 1 To attempts
             Dim shouldDelay As Boolean = False
 

@@ -30,10 +30,27 @@ Public Class WmsDispatchProcessor
             }
         End If
 
+        AllocateAndUpdateOrders(request)
+
+        Dim ordered = SortOrders(request)
+
+        Await _wcsClient.SendAsync(ordered, ct).ConfigureAwait(False)
+
+        _logger?.Info($"WMS.DispatchBatchForwarded[count={ordered.Count}]")
+
+        Return New DispatchBatchResponse With {
+            .Succeeded = True,
+            .Message = $"Ordini inoltrati al WCS: {ordered.Count}"
+        }
+    End Function
+
+    '-------------------------------------------------------------------------------
+    '- Assegna la location agli ordini che non ne hanno una valida e aggiorna lo status in OrderDispatches in "IN_PROGRESS"
+    Private Sub AllocateAndUpdateOrders(request As DispatchBatchRequest)
         For Each order In request.Orders
             Dim needsAllocation =
                 String.IsNullOrWhiteSpace(order.Location) OrElse
-                String.Equals(order.Location,   ' così il placeholder Z0000 viene considerato come "non allocato"
+                String.Equals(order.Location,   '- così il placeholder Z0000 viene considerato come "non allocato"
                               OrderDispatchRepository.DefaultLocation,
                               StringComparison.OrdinalIgnoreCase)
 
@@ -47,20 +64,15 @@ Public Class WmsDispatchProcessor
                                                    OrderDispatchRepository.StatusInProgress)
             End If
         Next
+    End Sub
 
-        Dim ordered = request.Orders _
+    '-------------------------------------------------------------------------------
+    '- Ordina gli ordini per priorità, data dell'ordine e Id
+    Private Shared Function SortOrders(request As DispatchBatchRequest) As List(Of DispatchOrderDto)
+        Return request.Orders _
             .OrderBy(Function(o) o.Priority) _
             .ThenBy(Function(o) o.OrderDate.GetValueOrDefault(Date.MinValue)) _
             .ThenBy(Function(o) o.OrderId) _
             .ToList()
-
-        Await _wcsClient.SendAsync(ordered, ct).ConfigureAwait(False)
-
-        _logger?.Info($"WMS.DispatchBatchForwarded[count={ordered.Count}]")
-
-        Return New DispatchBatchResponse With {
-            .Succeeded = True,
-            .Message = $"Ordini inoltrati al WCS: {ordered.Count}"
-        }
     End Function
 End Class
