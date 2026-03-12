@@ -15,9 +15,10 @@ Public Class ProjectInstaller
 
         serviceInstaller = New ServiceInstaller()
         serviceInstaller.ServiceName = "HOST.Sim"
-        serviceInstaller.DisplayName = "HOST Simulator Service"
+        serviceInstaller.DisplayName = "WareHouse HOST Service"
         serviceInstaller.Description = "Simulates the HOST system"
         serviceInstaller.StartType = ServiceStartMode.Automatic
+        serviceInstaller.DelayedAutoStart = True
 
         Installers.Add(serviceProcessInstaller)
         Installers.Add(serviceInstaller)

@@ -15,9 +15,10 @@ Public Class ProjectInstaller
 
         serviceInstaller = New ServiceInstaller()
         serviceInstaller.ServiceName = "PLC.Sim"
-        serviceInstaller.DisplayName = "PLC Simulator Service"
+        serviceInstaller.DisplayName = "Warehouse PLC Service"
         serviceInstaller.Description = "Simulates the PLC system"
         serviceInstaller.StartType = ServiceStartMode.Automatic
+        serviceInstaller.DelayedAutoStart = True
 
         Installers.Add(serviceProcessInstaller)
         Installers.Add(serviceInstaller)

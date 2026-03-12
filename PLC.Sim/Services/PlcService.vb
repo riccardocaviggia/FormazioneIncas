@@ -22,9 +22,13 @@ Public Class PlcService
     End Sub
 
     Protected Overrides Sub OnStop()
-        _tcpServer?.[Stop]()
-        _tcpServer = Nothing
+        Try
+            _tcpServer?.[Stop]()
+            _tcpServer = Nothing
 
-        _logger?.Info("PLC.Stopped")
+            _logger?.Info("PLC.Stopped")
+        Catch ex As Exception
+            _logger?.[Error]("PLC.OnStop.Error", ex)
+        End Try
     End Sub
 End Class

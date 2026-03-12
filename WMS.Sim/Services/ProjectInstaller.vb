@@ -15,9 +15,10 @@ Public Class ProjectInstaller
 
         serviceInstaller = New ServiceInstaller()
         serviceInstaller.ServiceName = "WMS.Sim"
-        serviceInstaller.DisplayName = "WMS Simulator Service"
+        serviceInstaller.DisplayName = "Warehouse WMS Service"
         serviceInstaller.Description = "Simulates the WMS system"
         serviceInstaller.StartType = ServiceStartMode.Automatic
+        serviceInstaller.DelayedAutoStart = True
 
         Installers.Add(serviceProcessInstaller)
         Installers.Add(serviceInstaller)

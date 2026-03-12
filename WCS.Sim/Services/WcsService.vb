@@ -1,4 +1,6 @@
-﻿Imports System.ServiceProcess
+﻿Imports System.Configuration.Install
+Imports System.Reflection
+Imports System.ServiceProcess
 Imports CommonSim
 
 Public Class WcsService
@@ -41,18 +43,22 @@ Public Class WcsService
     End Sub
 
     Protected Overrides Sub OnStop()
-        _dispatchServer?.[Stop]()
-        _dispatchServer = Nothing
+        Try
+            _dispatchServer?.[Stop]()
+            _dispatchServer = Nothing
 
-        _orderDispatcher?.[Stop]()
-        _orderDispatcher = Nothing
+            _orderDispatcher?.[Stop]()
+            _orderDispatcher = Nothing
 
-        _orderQueue?.Dispose()
-        _orderQueue = Nothing
+            _orderQueue?.Dispose()
+            _orderQueue = Nothing
 
-        _deliveryChannel?.Disconnect()
-        _deliveryChannel = Nothing
+            _deliveryChannel?.Disconnect()
+            _deliveryChannel = Nothing
 
-        _logger?.Info("WCS.Stopped")
+            _logger?.Info("WCS.Stopped")
+        Catch ex As Exception
+            _logger?.[Error]("WCS.OnStop.Error", ex)
+        End Try
     End Sub
 End Class

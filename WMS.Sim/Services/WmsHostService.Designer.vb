@@ -19,8 +19,8 @@ Partial Class WmsHostService
     ' Punto di ingresso principale — avvia WmsHostService
     <MTAThread()>
     <System.Diagnostics.DebuggerNonUserCode()>
-    Shared Sub Main()
-        ServiceHelper.RunService(New WmsHostService())
+    Shared Sub Main(ByVal args() As String)
+        ServiceManager.HandleService(args, New WmsHostService())
     End Sub
 
     Private components As System.ComponentModel.IContainer

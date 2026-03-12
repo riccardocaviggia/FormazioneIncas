@@ -5,7 +5,6 @@ Imports CommonSim
 Partial Class HostService
     Inherits System.ServiceProcess.ServiceBase
 
-    'UserService esegue l'override del metodo Dispose per pulire l'elenco dei componenti.
     <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
@@ -17,23 +16,19 @@ Partial Class HostService
         End Try
     End Sub
 
-    ' Il punto di ingresso principale del processo
+    ' Punto di ingresso principale — avvia WmsHostService
     <MTAThread()>
     <System.Diagnostics.DebuggerNonUserCode()>
-    Shared Sub Main()
-        ServiceHelper.RunService(New HostService())
+    Shared Sub Main(ByVal args() As String)
+        ServiceManager.HandleService(args, New HostService())
     End Sub
 
-    'Richiesto da Progettazione componenti
     Private components As System.ComponentModel.IContainer
 
-    ' NOTA: la procedura che segue è richiesta da Progettazione componenti
-    ' Può essere modificata in Progettazione componenti.  
-    ' Non modificarla nell'editor del codice.
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         components = New System.ComponentModel.Container()
-        Me.ServiceName = "HostService"
+        Me.ServiceName = "WmsHostService"
     End Sub
 
 End Class

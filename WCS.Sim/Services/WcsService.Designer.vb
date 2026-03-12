@@ -3,7 +3,7 @@ Imports CommonSim
 
 <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
 Partial Class WcsService
-    Inherits System.ServiceProcess.ServiceBase
+    Inherits ServiceBase
 
     'UserService esegue l'override del metodo Dispose per pulire l'elenco dei componenti.
     <System.Diagnostics.DebuggerNonUserCode()> _
@@ -18,10 +18,10 @@ Partial Class WcsService
     End Sub
 
     ' Il punto di ingresso principale del processo
-    <MTAThread()> _
-    <System.Diagnostics.DebuggerNonUserCode()> _
-    Shared Sub Main()
-        ServiceHelper.RunService(New WcsService())
+    <MTAThread()>
+    <System.Diagnostics.DebuggerNonUserCode()>
+    Shared Sub Main(ByVal args() As String)
+        ServiceManager.HandleService(args, New WcsService())
     End Sub
 
     'Richiesto da Progettazione componenti

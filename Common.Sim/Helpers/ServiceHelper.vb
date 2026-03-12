@@ -23,7 +23,16 @@ Public Class ServiceHelper
 
             Dim onStart = service.GetType().GetMethod("OnStart", BindingFlags.Instance Or BindingFlags.NonPublic)
             Dim realArgs = Environment.GetCommandLineArgs().Skip(1).ToArray()
-            onStart.Invoke(service, New Object() {realArgs})
+
+            Try
+                onStart.Invoke(service, New Object() {realArgs})
+            Catch ex As TargetInvocationException
+                Console.WriteLine("Error starting service: " & ex.InnerException.Message)
+                Console.WriteLine("Press any key to exit...")
+                Console.ReadKey()
+                Return
+            End Try
+
 
             Dim stopEvent = New ManualResetEvent(False)
             AddHandler Console.CancelKeyPress, Sub(sender, e)

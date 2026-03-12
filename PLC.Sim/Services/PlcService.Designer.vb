@@ -20,8 +20,8 @@ Partial Class PlcService
     ' Il punto di ingresso principale del processo
     <MTAThread()>
     <System.Diagnostics.DebuggerNonUserCode()>
-    Shared Sub Main()
-        ServiceHelper.RunService(New PlcService())
+    Shared Sub Main(ByVal args() As String)
+        ServiceManager.HandleService(args, New PlcService())
     End Sub
 
     'Richiesto da Progettazione componenti

@@ -71,10 +71,15 @@ Public Class HostService
     End Sub
 
     Protected Overrides Sub OnStop()
-        _ordersPoller?.StopPolling()
-        _ordersPoller = Nothing
+        Try
+            _ordersPoller?.StopPolling()
+            _ordersPoller = Nothing
 
-        _logger?.Info("HOST.Stopped")
+            _logger?.Info("HOST.Stopped")
+        Catch ex As Exception
+            _logger?.[Error]("HOST.StopError", ex)
+        End Try
+
     End Sub
 
     '-------------------------------------------------------------------------------

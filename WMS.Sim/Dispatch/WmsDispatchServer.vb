@@ -100,6 +100,7 @@ Public Class WmsDispatchServer
                 Dim buffer = Encoding.UTF8.GetBytes(json)
                 context.Response.ContentType = "application/json"
                 context.Response.ContentLength64 = buffer.Length
+                context.Response.StatusCode = CInt(HttpStatusCode.OK)
                 Await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(False)
             Catch ex As Exception
                 _logger?.[Error]("WMS.DispatchHandleError", ex)

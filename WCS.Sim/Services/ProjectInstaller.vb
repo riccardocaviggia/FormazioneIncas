@@ -15,9 +15,10 @@ Public Class ProjectInstaller
 
         serviceInstaller = New ServiceInstaller()
         serviceInstaller.ServiceName = "WCS.Sim"
-        serviceInstaller.DisplayName = "WCS Simulator Service"
+        serviceInstaller.DisplayName = "Warehouse WCS Service"
         serviceInstaller.Description = "Simulates the WCS system."
         serviceInstaller.StartType = ServiceStartMode.Automatic
+        serviceInstaller.DelayedAutoStart = True
 
         Installers.Add(serviceProcessInstaller)
         Installers.Add(serviceInstaller)
