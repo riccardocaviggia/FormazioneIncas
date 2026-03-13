@@ -19,11 +19,6 @@ Public Class BasicAuthenticator
     '- Valida l'header Authorization della richiesta
     Public Function IsAuthenticated(request As HttpListenerRequest) As Boolean
 
-        For Each key As String In request.Headers.AllKeys
-            _logger?.Log("DEBUG", "Header", $"{key}: {request.Headers(key)}")
-        Next
-
-
         Dim authHeader = request.Headers("Authorization")
         If String.IsNullOrWhiteSpace(authHeader) Then Return False
         If Not authHeader.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase) Then Return False

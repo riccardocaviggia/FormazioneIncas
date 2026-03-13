@@ -45,7 +45,7 @@ Public Class WcsDispatchServer
 
         _cts = New CancellationTokenSource()
         _listenerTask = Task.Run(Function() ListenAsync(_cts.Token))
-        _logger?.Info($"WCS.DispatchServerStarted[{_prefix}]")
+        _logger?.Log("INFO", "WCS.DispatchServerStarted", $"[{_prefix}]")
     End Sub
 
     '-------------------------------------------------------------------------------
@@ -72,6 +72,18 @@ Public Class WcsDispatchServer
     '- GESTIONE RICHIESTA: se è una POST a /dispatch, legge il body, deserializza e mette gli ordini in coda. Altrimenti risponde con 404
     Private Async Function HandleAsync(context As HttpListenerContext) As Task
         Using context.Response
+
+            '- Gestione richiesta GET a /ready per determinare se il servizio è pronto, senza autenticazione
+            If context.Request.HttpMethod = "GET" AndAlso
+               context.Request.Url.AbsolutePath.TrimEnd("/"c).EndsWith("/ready", StringComparison.OrdinalIgnoreCase) Then
+                context.Response.StatusCode = CInt(HttpStatusCode.OK)
+                context.Response.ContentType = "text/plain"
+
+                Using writer As New StreamWriter(context.Response.OutputStream)
+                    writer.Write("OK")
+                End Using
+                Return
+            End If
 
             '- Basic Authentication
             If Not _auth.IsAuthenticated(context.Request) Then

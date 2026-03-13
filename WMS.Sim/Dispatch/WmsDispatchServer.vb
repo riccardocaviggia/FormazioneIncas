@@ -43,7 +43,7 @@ Public Class WmsDispatchServer
         _listener.Prefixes.Add(listenerPrefix)
         Try
             _listener.Start()
-            _logger?.Info($"WMS.DispatchServerStarted[{_prefix}]")
+            _logger?.Log("INFO", "WMS.DispatchServerStarted", $"[{_prefix}]")
         Catch ex As HttpListenerException
             _logger?.[Error]($"WMS.DispatchServerStartError[{_prefix}]", ex)
             Throw
@@ -88,12 +88,26 @@ Public Class WmsDispatchServer
     Private Async Function HandleAsync(context As HttpListenerContext) As Task
         Using context.Response
 
+            '- Gestione richiesta GET a /ready per determinare se il servizio è pronto, senza autenticazione
+            If context.Request.HttpMethod = "GET" AndAlso
+               context.Request.Url.AbsolutePath.TrimEnd("/"c).EndsWith("/ready", StringComparison.OrdinalIgnoreCase) Then
+                context.Response.StatusCode = CInt(HttpStatusCode.OK)
+                context.Response.ContentType = "text/plain"
+
+                Using writer As New StreamWriter(context.Response.OutputStream)
+                    writer.Write("OK")
+                End Using
+                Return
+            End If
+
             '- Basic Authentication
             If Not _auth.IsAuthenticated(context.Request) Then
                 _logger?.Log("Warn", "WMS.Unauthorized", context.Request.RemoteEndPoint?.ToString())
                 BasicAuthenticator.WriteUnauthorizedResponse(context.Response, "WMS")
                 Return
             End If
+
+            _logger?.Log("INFO", "WMS.Authenticated", context.Request.RemoteEndPoint?.ToString())
 
             If context.Request.HttpMethod <> "POST" OrElse
                Not context.Request.Url.AbsolutePath.TrimEnd("/"c).EndsWith("/dispatch", StringComparison.OrdinalIgnoreCase) Then

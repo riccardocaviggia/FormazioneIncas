@@ -1,6 +1,8 @@
 ﻿Imports System.Collections.Generic
+Imports System.IO
 Imports System.Net
 Imports System.Net.Http
+Imports System.Net.Sockets
 Imports System.Threading
 Imports System.Threading.Tasks
 Imports CommonSim
@@ -14,13 +16,11 @@ Public Class HostService
     Private _dispatchRepository As OrderDispatchRepository
     Private _wmsDispatchClient As WmsDispatchClient
 
-    Protected Overrides Sub OnStart(ByVal args() As String)
+    Protected Overrides Async Sub OnStart(ByVal args() As String)
         Dim cs As String = ConnectionStringProvider.GetConnectionString(args)
 
         _logger = New ServiceLogger(cs, "HOST.Sim", Sub()
                                                     End Sub)
-
-        _logger.Info("HOST.OnStart.START")
 
         '-------------------------------------------------------------------------------
         '- Webservice per passaggio ordini da HOST a Warehouse (WMS)
@@ -30,31 +30,8 @@ Public Class HostService
             WmsConfig.GetAuthPassword())
 
         '-------------------------------------------------------------------------------
-        '- Verifica che l'endpoint di dispatch sia raggiungibile prima di partire con il polling degli ordini,
-        'altrimenti si rischia una race condition: l'HOST inizia a mandare i dati quando il WMS non è ancora pronto
-        Dim deadline = DateTime.UtcNow.AddSeconds(30)
-        Do
-            Try
-                Using req As New HttpRequestMessage(
-                        HttpMethod.Head,
-                        WmsConfig.GetDispatchEndpoint())
-                    Dim handler As New HttpClientHandler() With {
-                        .ServerCertificateCustomValidationCallback = Function(m, c, ch, e) True
-                        }
-                    Using client As New HttpClient(handler)
-                        Dim res = client.SendAsync(req).GetAwaiter().GetResult()
-                        If res.StatusCode = HttpStatusCode.MethodNotAllowed OrElse
-                           res.StatusCode = HttpStatusCode.NotFound OrElse
-                           res.IsSuccessStatusCode Then
-                            Exit Do
-                        End If
-                    End Using
-                End Using
-            Catch
-            End Try
-            If DateTime.UtcNow > deadline Then Exit Do
-            Threading.Thread.Sleep(500)
-        Loop
+        '- Attende che WMS, WCS e PLC siano avviati prima di iniziare a prendere gli ordini da Northwind e mandarli al WMS
+        Await WaitForAllServicesReadyAsync()
 
         '-------------------------------------------------------------------------------
         '- TASK RICEZIONE ORDINI (prende gli ordini da Nortwind e li porta su Warehouse)
@@ -181,4 +158,62 @@ Public Class HostService
             End Try
         Next
     End Sub
+
+    '-------------------------------------------------------------------------------
+    '- Funzione che controlla che WMS, WCS e PLC siano avviati
+    Private Async Function WaitForAllServicesReadyAsync() As Task
+        Dim endpoints = {WmsConfig.GetServiceEndpoint(), WcsConfig.GetServiceEndpoint()}
+        Dim servicesReady As Boolean = False
+
+        While Not servicesReady
+            servicesReady = True
+
+            '- Controlla WMS e WCS tramite chiamata HTTP GET all'endpoint /ready (devono rispondere con 200 OK)
+            For Each url In endpoints
+
+                Try
+                    Using client As New HttpClient()
+                        Dim res = Await client.GetAsync(url)
+                        If res.StatusCode = HttpStatusCode.OK Then
+                            If url.Contains("wms") Then
+                                _logger?.Log("INFO", "WMS.StartResponse", $"status = {res.StatusCode}")
+                            Else _logger?.Log("INFO", "WCS.StartResponse", $"status = {res.StatusCode}")
+                            End If
+                        End If
+                        If Not res.IsSuccessStatusCode Then
+                            servicesReady = False
+                            Exit For
+                        End If
+                    End Using
+                Catch
+                    servicesReady = False
+                    Exit For
+                End Try
+            Next
+
+            '- Controlla PLC aprendo una connessione TCP, inviando "STATUS" e aspettando "OK"
+            If servicesReady Then
+                Try
+                    Using tcp = New TcpClient()
+                        Await tcp.ConnectAsync(TcpConfig.GetPlcHost, TcpConfig.GetPlcPort)
+                        Using stream = tcp.GetStream()
+                            Dim writer As New StreamWriter(stream) With {.AutoFlush = True}
+                            Dim reader As New StreamReader(stream)
+                            Await writer.WriteLineAsync("STATUS")
+                            Dim response = Await reader.ReadLineAsync()
+                            If response Is Nothing OrElse response.Trim().ToUpper() <> "OK" Then
+                                servicesReady = False
+                            Else
+                                _logger?.Log("INFO", "PLC.StartResponse", $"response={response}")
+                            End If
+                        End Using
+                    End Using
+                Catch
+                    servicesReady = False
+                End Try
+            End If
+
+            If Not servicesReady Then Await Task.Delay(1000)
+        End While
+    End Function
 End Class

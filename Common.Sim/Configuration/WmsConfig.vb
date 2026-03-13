@@ -6,6 +6,10 @@ Public Class WmsConfig
         Return GetRequiredEndpoint("WmsDispatchEndpoint", True)
     End Function
 
+    Public Shared Function GetServiceEndpoint() As String
+        Return GetRequiredEndpoint("WmsServiceEndpoint", True)
+    End Function
+
     Public Shared Function GetAuthUsername() As String
         Return GetRequiredSettings("WmsAuthUsername")
     End Function

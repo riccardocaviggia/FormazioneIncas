@@ -6,6 +6,10 @@ Public Class WcsConfig
         Return GetRequiredEndpoint("WcsDispatchEndpoint", True)
     End Function
 
+    Public Shared Function GetServiceEndpoint() As String
+        Return GetRequiredEndpoint("WcsServiceEndpoint", True)
+    End Function
+
     Public Shared Function GetAuthUsername() As String
         Return GetRequiredSettings("WcsAuthUsername")
     End Function

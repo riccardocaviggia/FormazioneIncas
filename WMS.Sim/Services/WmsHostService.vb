@@ -41,12 +41,11 @@ Public Class WmsHostService
             '- HTTP dispatch server (riceve le chiamate dal WmsDispatchClient (HOST)) e le passa al processor per l'elaborazione. 
             'Il server è implementato con HttpListener, non con WCF, per semplicità e leggerezza (non serve tutta la complessità di WCF per questo scenario)
             _dispatchServer = New WmsDispatchServer(
-                WmsConfig.GetDispatchEndpoint(),
+                "https://localhost:8443/wms/",
                 processor,
                 _logger,
                 auth)
             _dispatchServer.Start()
-            _logger.Info("WMS.DispatchServerStarted")
 
             '-------------------------------------------------------------------------------
         Catch ex As Exception

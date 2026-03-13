@@ -91,6 +91,12 @@ Public Class PlcTcpServer
 
             If line Is Nothing Then Exit While
 
+            '- Controllo sullo stato del PLC: risponde OK se riceve "STATUS"
+            If line.Trim().ToUpper() = "STATUS" Then
+                writer.WriteLine("OK")
+                Continue While
+            End If
+
             HandleOrderMessage(line, writer)
         End While
     End Sub

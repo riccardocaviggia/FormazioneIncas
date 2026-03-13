@@ -41,7 +41,7 @@ Public Class WcsService
             WcsConfig.GetAuthPassword())
 
         _dispatchServer = New WcsDispatchServer(
-            WcsConfig.GetDispatchEndpoint(),
+            "https://localhost:9443/wcs/",
             _orderQueue,
             _logger,
             auth)

@@ -16,9 +16,13 @@ Public Class PlcService
                                                            End Sub)
         _logger.Info("PLC.Starting")
         _tcpServer = New PlcTcpServer(TcpConfig.GetPlcPort(), _logger)
-        _tcpServer.Start()
 
-        _logger.Info("PLC.Stopped")
+        Try
+            _tcpServer.Start()
+        Catch ex As Exception
+            _logger?.[Error]("PLC.OnStart.Error", ex)
+        End Try
+
     End Sub
 
     Protected Overrides Sub OnStop()
