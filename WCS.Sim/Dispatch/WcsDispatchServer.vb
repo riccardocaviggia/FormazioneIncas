@@ -12,6 +12,7 @@ Public Class WcsDispatchServer
     Private ReadOnly _prefix As String
     Private ReadOnly _queue As WcsOrderQueue
     Private ReadOnly _logger As ServiceLogger
+    Private ReadOnly _auth As BasicAuthenticator
 
     Private _listener As HttpListener
     Private _cts As CancellationTokenSource
@@ -23,12 +24,15 @@ Public Class WcsDispatchServer
 
     Public Sub New(prefix As String,
                    queue As WcsOrderQueue,
-                   logger As ServiceLogger)
+                   logger As ServiceLogger,
+                   auth As BasicAuthenticator)
         If String.IsNullOrWhiteSpace(prefix) Then Throw New ArgumentNullException(NameOf(prefix))
         _prefix = prefix
         If queue Is Nothing Then Throw New ArgumentNullException(NameOf(queue))
         _queue = queue
         _logger = logger
+        If auth Is Nothing Then Throw New ArgumentNullException(NameOf(auth))
+        _auth = auth
     End Sub
 
     Public Sub Start()
@@ -68,6 +72,14 @@ Public Class WcsDispatchServer
     '- GESTIONE RICHIESTA: se è una POST a /dispatch, legge il body, deserializza e mette gli ordini in coda. Altrimenti risponde con 404
     Private Async Function HandleAsync(context As HttpListenerContext) As Task
         Using context.Response
+
+            '- Basic Authentication
+            If Not _auth.IsAuthenticated(context.Request) Then
+                _logger?.Log("Warn", "WCS.Unauthorized", context.Request.RemoteEndPoint?.ToString())
+                BasicAuthenticator.WriteUnauthorizedResponse(context.Response, "WCS")
+                Return
+            End If
+
             If context.Request.HttpMethod <> "POST" OrElse
                Not context.Request.Url.AbsolutePath.TrimEnd("/"c).EndsWith("/dispatch", StringComparison.OrdinalIgnoreCase) Then
                 context.Response.StatusCode = CInt(HttpStatusCode.NotFound)

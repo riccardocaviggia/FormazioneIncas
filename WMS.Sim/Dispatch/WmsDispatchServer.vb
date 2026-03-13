@@ -12,6 +12,8 @@ Public Class WmsDispatchServer
     Private ReadOnly _prefix As String
     Private ReadOnly _processor As WmsDispatchProcessor
     Private ReadOnly _logger As ServiceLogger
+    Private ReadOnly _auth As BasicAuthenticator
+
     Private _listener As HttpListener
     Private _cts As CancellationTokenSource
     Private _listenerTask As Task
@@ -22,12 +24,15 @@ Public Class WmsDispatchServer
 
     Public Sub New(prefix As String,
                    processor As WmsDispatchProcessor,
-                   logger As ServiceLogger)
+                   logger As ServiceLogger,
+                   auth As BasicAuthenticator)
         If String.IsNullOrWhiteSpace(prefix) Then Throw New ArgumentNullException(NameOf(prefix))
         _prefix = prefix
         If processor Is Nothing Then Throw New ArgumentNullException(NameOf(processor))
         _processor = processor
         _logger = logger
+        If auth Is Nothing Then Throw New ArgumentNullException(NameOf(auth))
+        _auth = auth
     End Sub
 
     Public Sub Start()
@@ -78,9 +83,18 @@ Public Class WmsDispatchServer
     End Function
 
     '-------------------------------------------------------------------------------
-    '- GESTIONE RICHIESTA: se è una POST a /dispatch, deserializza il body e lo passa al processor, altrimenti risponde con 404
+    '- GESTIONE RICHIESTA: se è una POST a /dispatch, deserializza il body e lo passa al processor,
+    ' altrimenti risponde con 404
     Private Async Function HandleAsync(context As HttpListenerContext) As Task
         Using context.Response
+
+            '- Basic Authentication
+            If Not _auth.IsAuthenticated(context.Request) Then
+                _logger?.Log("Warn", "WMS.Unauthorized", context.Request.RemoteEndPoint?.ToString())
+                BasicAuthenticator.WriteUnauthorizedResponse(context.Response, "WMS")
+                Return
+            End If
+
             If context.Request.HttpMethod <> "POST" OrElse
                Not context.Request.Url.AbsolutePath.TrimEnd("/"c).EndsWith("/dispatch", StringComparison.OrdinalIgnoreCase) Then
                 context.Response.StatusCode = CInt(HttpStatusCode.NotFound)

@@ -18,20 +18,36 @@ Public Class WmsHostService
         Try
             '-------------------------------------------------------------------------------
             'Client per chiamare il WCS (Warehouse Control System) e dirgli di eseguire le missioni di movimentazione merci
-            Dim wcsClient = New WcsDispatchClient(WcsConfig.GetDispatchEndpoint())
+            Dim wcsClient = New WcsDispatchClient(
+                WcsConfig.GetDispatchEndpoint(),
+                WcsConfig.GetAuthUsername(),
+                WcsConfig.GetAuthPassword())
             'Elenco ordini da mandare al WCS
             _dispatchRepository = New OrderDispatchRepository(connectionString)
+
             '-------------------------------------------------------------------------------
             'Genera delle locazioni (vani)
             Dim allocator = New LocationAllocator()
             'Processor che riceve le richieste di dispatch dal WmsDispatchServer (vedi sotto) e le trasforma in missioni da mandare al WCS tramite wcsClient.
             Dim processor = New WmsDispatchProcessor(allocator, wcsClient, _dispatchRepository, _logger)
+
+            '-------------------------------------------------------------------------------
+            '- Basic Authentication per le richieste in ingresso dall'HOST
+            Dim auth = New BasicAuthenticator(
+                WmsConfig.GetAuthUsername(),
+                WmsConfig.GetAuthPassword())
+
             '-------------------------------------------------------------------------------
             '- HTTP dispatch server (riceve le chiamate dal WmsDispatchClient (HOST)) e le passa al processor per l'elaborazione. 
             'Il server è implementato con HttpListener, non con WCF, per semplicità e leggerezza (non serve tutta la complessità di WCF per questo scenario)
-            _dispatchServer = New WmsDispatchServer(WmsConfig.GetDispatchEndpoint(), processor, _logger)
+            _dispatchServer = New WmsDispatchServer(
+                WmsConfig.GetDispatchEndpoint(),
+                processor,
+                _logger,
+                auth)
             _dispatchServer.Start()
             _logger.Info("WMS.DispatchServerStarted")
+
             '-------------------------------------------------------------------------------
         Catch ex As Exception
             _logger?.[Error]("WMS.DispatchServerStartError", ex)

@@ -19,10 +19,14 @@ Public Class WcsDispatchClient
     }
 
     Private ReadOnly _endpoint As Uri
+    Private ReadOnly _authHeaderValue As String
 
-    Public Sub New(endpoint As String)
+    Public Sub New(endpoint As String, username As String, password As String)
         If String.IsNullOrWhiteSpace(endpoint) Then Throw New ArgumentNullException(NameOf(endpoint))
+        If String.IsNullOrWhiteSpace(username) Then Throw New ArgumentNullException(NameOf(username))
+        If String.IsNullOrWhiteSpace(password) Then Throw New ArgumentNullException(NameOf(password))
         _endpoint = New Uri(endpoint, UriKind.Absolute)
+        _authHeaderValue = BasicAuthenticator.BuildHeaderValue(username, password)
     End Sub
 
     '-------------------------------------------------------------------------------
@@ -34,8 +38,10 @@ Public Class WcsDispatchClient
         Dim payload = New DispatchBatchRequest With {.Orders = orders.ToList()}
         Dim json = JsonSerializer.Serialize(payload, JsonOptions)
 
-        Using content As New StringContent(json, Encoding.UTF8, "application/json")
-            Dim response = Await Http.PostAsync(_endpoint, content, ct).ConfigureAwait(False)
+        Using request As New HttpRequestMessage(HttpMethod.Post, _endpoint)
+            request.Content = New StringContent(json, Encoding.UTF8, "application/json")
+            request.Headers.TryAddWithoutValidation("Authorization", _authHeaderValue)
+            Dim response = Await Http.SendAsync(request, ct).ConfigureAwait(False)
             response.EnsureSuccessStatusCode()
         End Using
     End Function

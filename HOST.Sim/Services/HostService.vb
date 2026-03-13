@@ -24,7 +24,10 @@ Public Class HostService
 
         '-------------------------------------------------------------------------------
         '- Webservice per passaggio ordini da HOST a Warehouse (WMS)
-        _wmsDispatchClient = New WmsDispatchClient(WmsConfig.GetDispatchEndpoint())
+        _wmsDispatchClient = New WmsDispatchClient(
+            WmsConfig.GetDispatchEndpoint(),
+            WmsConfig.GetAuthUsername(),
+            WmsConfig.GetAuthPassword())
 
         '-------------------------------------------------------------------------------
         '- Verifica che l'endpoint di dispatch sia raggiungibile prima di partire con il polling degli ordini,

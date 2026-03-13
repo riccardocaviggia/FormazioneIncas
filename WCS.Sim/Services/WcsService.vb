@@ -36,7 +36,15 @@ Public Class WcsService
 
         '-------------------------------------------------------------------------------
         '- Avvia il server: riceve i batch dal WMS via HTTPS
-        _dispatchServer = New WcsDispatchServer(WcsConfig.GetDispatchEndpoint(), _orderQueue, _logger)
+        Dim auth = New BasicAuthenticator(
+            WcsConfig.GetAuthUsername(),
+            WcsConfig.GetAuthPassword())
+
+        _dispatchServer = New WcsDispatchServer(
+            WcsConfig.GetDispatchEndpoint(),
+            _orderQueue,
+            _logger,
+            auth)
         _dispatchServer.Start()
 
         _logger.Info("WCS.Started")
