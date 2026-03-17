@@ -176,8 +176,8 @@ Public Class HostService
                         Dim res = Await client.GetAsync(url)
                         If res.StatusCode = HttpStatusCode.OK Then
                             If url.Contains("wms") Then
-                                _logger?.Log("INFO", "WMS.StartResponse", $"status = {res.StatusCode}")
-                            Else _logger?.Log("INFO", "WCS.StartResponse", $"status = {res.StatusCode}")
+                                _logger?.Log("INFO", "WMS.StartResponse", $"status.ready = {res.StatusCode}")
+                            Else _logger?.Log("INFO", "WCS.StartResponse", $"status.ready = {res.StatusCode}")
                             End If
                         End If
                         If Not res.IsSuccessStatusCode Then

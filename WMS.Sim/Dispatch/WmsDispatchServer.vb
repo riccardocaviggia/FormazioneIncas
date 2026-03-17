@@ -89,16 +89,7 @@ Public Class WmsDispatchServer
         Using context.Response
 
             '- Gestione richiesta GET a /ready per determinare se il servizio è pronto, senza autenticazione
-            If context.Request.HttpMethod = "GET" AndAlso
-               context.Request.Url.AbsolutePath.TrimEnd("/"c).EndsWith("/ready", StringComparison.OrdinalIgnoreCase) Then
-                context.Response.StatusCode = CInt(HttpStatusCode.OK)
-                context.Response.ContentType = "text/plain"
-
-                Using writer As New StreamWriter(context.Response.OutputStream)
-                    writer.Write("OK")
-                End Using
-                Return
-            End If
+            If HandleReadyAsync(context) Then Return
 
             '- Basic Authentication
             If Not _auth.IsAuthenticated(context.Request) Then

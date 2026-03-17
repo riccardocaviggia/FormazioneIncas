@@ -105,6 +105,7 @@
     <Compile Include="Clients\WmsDispatchClient.vb" />
     <Compile Include="Configuration\AppSettingsReader.vb" />
     <Compile Include="Configuration\WcsConfig.vb" />
+    <Compile Include="Http\HttpHelper.vb" />
     <Compile Include="Logging\ServiceLogger.vb" />
     <Compile Include="Logging\ServiceLogRepository.vb" />
     <Compile Include="Models\Dispatch\DispatchBatchRequest.vb" />
