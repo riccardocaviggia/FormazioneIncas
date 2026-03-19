@@ -21,6 +21,7 @@ Public Class HostService
 
         _logger = New ServiceLogger(cs, "HOST.Sim", Sub()
                                                     End Sub)
+        _logger.Info("OnStart")
 
         '-------------------------------------------------------------------------------
         '- Webservice per passaggio ordini da HOST a Warehouse (WMS)
@@ -52,6 +53,8 @@ Public Class HostService
 
     Protected Overrides Sub OnStop()
         Try
+            _logger.Info("OnStop")
+
             _ordersPoller?.StopPolling()
             _ordersPoller = Nothing
 

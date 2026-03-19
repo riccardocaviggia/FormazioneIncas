@@ -2,6 +2,9 @@
 Imports System.Net
 
 Public Module HttpHelper
+    '-------------------------------------------------------------------------------
+    '- Funzione per gestire la richiesta GET a /ready, usata per controllare che WMS e WCS siano pronti
+    ' prima di far partire il polling dell'HOST.
     Public Function HandleReadyAsync(context As HttpListenerContext) As Boolean
         If context.Request.HttpMethod = "GET" AndAlso
                context.Request.Url.AbsolutePath.TrimEnd("/"c).EndsWith("/ready", StringComparison.OrdinalIgnoreCase) Then
