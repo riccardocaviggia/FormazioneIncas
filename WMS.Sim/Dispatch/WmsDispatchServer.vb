@@ -100,31 +100,42 @@ Public Class WmsDispatchServer
 
             _logger?.Log("INFO", "WMS.Authenticated", context.Request.RemoteEndPoint?.ToString())
 
-            If context.Request.HttpMethod <> "POST" OrElse
-               Not context.Request.Url.AbsolutePath.TrimEnd("/"c).EndsWith("/dispatch", StringComparison.OrdinalIgnoreCase) Then
-                context.Response.StatusCode = CInt(HttpStatusCode.NotFound)
+            Dim path = context.Request.Url.AbsolutePath.ToLower()
+
+
+            If path.Contains("/dispatch/completed/") AndAlso context.Request.HttpMethod = "POST" Then
+                Dim orderId = path.Substring(path.LastIndexOf("/") + 1)
+
+                _logger?.Info("WMS received ACK from WCS")
+
+                context.Response.StatusCode = CInt(HttpStatusCode.OK)
                 Return
             End If
 
-            Try
-                Dim body As String
-                Using reader As New StreamReader(context.Request.InputStream, Encoding.UTF8)
-                    body = Await reader.ReadToEndAsync().ConfigureAwait(False)
-                End Using
+            If path.EndsWith("/dispatch/") AndAlso context.Request.HttpMethod = "POST" Then
+                Try
+                    Dim body As String
+                    Using reader As New StreamReader(context.Request.InputStream, Encoding.UTF8)
+                        body = Await reader.ReadToEndAsync().ConfigureAwait(False)
+                    End Using
 
-                Dim request = JsonSerializer.Deserialize(Of DispatchBatchRequest)(body, JsonOptions)
-                Dim response = Await _processor.ProcessAsync(request, CancellationToken.None).ConfigureAwait(False)
+                    Dim request = JsonSerializer.Deserialize(Of DispatchBatchRequest)(body, JsonOptions)
+                    Dim response = Await _processor.ProcessAsync(request, CancellationToken.None).ConfigureAwait(False)
 
-                Dim json = JsonSerializer.Serialize(response, JsonOptions)
-                Dim buffer = Encoding.UTF8.GetBytes(json)
-                context.Response.ContentType = "application/json"
-                context.Response.ContentLength64 = buffer.Length
-                context.Response.StatusCode = CInt(HttpStatusCode.OK)
-                Await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(False)
-            Catch ex As Exception
-                _logger?.[Error]("WMS.DispatchHandleError", ex)
-                context.Response.StatusCode = CInt(HttpStatusCode.InternalServerError)
-            End Try
+                    Dim json = JsonSerializer.Serialize(response, JsonOptions)
+                    Dim buffer = Encoding.UTF8.GetBytes(json)
+                    context.Response.ContentType = "application/json"
+                    context.Response.ContentLength64 = buffer.Length
+                    context.Response.StatusCode = CInt(HttpStatusCode.OK)
+                    Await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(False)
+                Catch ex As Exception
+                    _logger?.[Error]("WMS.DispatchHandleError", ex)
+                    context.Response.StatusCode = CInt(HttpStatusCode.InternalServerError)
+                End Try
+            Else
+                context.Response.StatusCode = CInt(HttpStatusCode.NotFound)
+            End If
+
         End Using
     End Function
 

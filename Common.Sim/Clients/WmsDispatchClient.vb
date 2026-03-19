@@ -6,6 +6,8 @@ Imports System.Threading
 Imports System.Threading.Tasks
 
 Public Class WmsDispatchClient
+    Private ReadOnly _logger As ServiceLogger
+
     Private Shared ReadOnly Http As New HttpClient(
         New HttpClientHandler() With {
             .UseProxy = False,      ' disabilita il proxy
@@ -21,12 +23,13 @@ Public Class WmsDispatchClient
     Private ReadOnly _endpoint As Uri
     Private ReadOnly _authHeaderValue As String
 
-    Public Sub New(endpoint As String, username As String, password As String)
+    Public Sub New(endpoint As String, username As String, password As String, logger As ServiceLogger)
         If String.IsNullOrWhiteSpace(endpoint) Then Throw New ArgumentNullException(NameOf(endpoint))
         If String.IsNullOrWhiteSpace(username) Then Throw New ArgumentNullException(NameOf(username))
         If String.IsNullOrWhiteSpace(password) Then Throw New ArgumentNullException(NameOf(password))
         _endpoint = New Uri(endpoint, UriKind.Absolute)
         _authHeaderValue = BasicAuthenticator.BuildHeaderValue(username, password)
+        _logger = logger
     End Sub
 
     '-------------------------------------------------------------------------------
@@ -47,4 +50,5 @@ Public Class WmsDispatchClient
             Return True
         End Using
     End Function
+
 End Class

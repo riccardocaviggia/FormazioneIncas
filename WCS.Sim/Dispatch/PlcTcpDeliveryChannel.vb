@@ -1,4 +1,5 @@
 Imports System.IO
+Imports System.Net.Http
 Imports System.Net.Sockets
 Imports System.Text
 Imports System.Text.Json
@@ -15,7 +16,9 @@ Public Class PlcTcpDeliveryChannel
     Private ReadOnly _logger As ServiceLogger
     Private ReadOnly _ackTimeout As TimeSpan
 
-    Private _client As TcpClient
+    Private Shared _httpClient As HttpClient
+
+    Private _tcpClient As TcpClient
     Private _reader As StreamReader
     Private _writer As StreamWriter
 
@@ -42,9 +45,9 @@ Public Class PlcTcpDeliveryChannel
         Dim deadline = DateTime.UtcNow.AddSeconds(30)
         While True
             Try
-                _client = New TcpClient() With {.NoDelay = True}
-                _client.Connect(_host, _port)
-                Dim stream = _client.GetStream()
+                _tcpClient = New TcpClient() With {.NoDelay = True}
+                _tcpClient.Connect(_host, _port)
+                Dim stream = _tcpClient.GetStream()
                 _reader = New StreamReader(stream, Encoding.UTF8, False, 4096, True)
                 _writer = New StreamWriter(stream, Encoding.UTF8, 4096, True) With {.AutoFlush = True}
                 _logger?.Info("WCS.PlcConnected")
@@ -66,12 +69,13 @@ Public Class PlcTcpDeliveryChannel
         Try
             Dim msg = BuildOrder(order)
             Await _writer.WriteLineAsync(JsonSerializer.Serialize(msg, JsonOptions)).ConfigureAwait(False)
-            _logger?.Info($"WCS.OrderSentToPlc[OrderId={order.OrderId};Location={order.Location}]")
+            _logger?.Info($"WCS --- [OrderId={order.OrderId};Location={order.Location}] --> PLC")
 
             '- Attesa ACK con timeout
             Dim ackline = Await WaitForAckAsync(order, ct).ConfigureAwait(False)
             If ackline IsNot Nothing Then
                 ProcessAck(order, ackline)
+                Await sendAckToWms(order.OrderId).ConfigureAwait(False)
             End If
 
         Catch ex As Exception When Not TypeOf ex Is OperationCanceledException
@@ -118,18 +122,40 @@ Public Class PlcTcpDeliveryChannel
         Dim ack = JsonSerializer.Deserialize(Of PlcAckMessage)(ackline, JsonOptions)
         If ack?.Ok Then
             _dispatchRepository.UpdateDispatch(order.DispatchId, order.Location, OrderDispatchRepository.StatusCompleted)
-            _logger?.Info($"WCS.OrderCompleted[OrderId={order.OrderId}]")
+            _logger?.Log("INFO", $"WCS updated status [OrderId={order.OrderId}]", $"[OrderId={order.OrderId}]={OrderDispatchRepository.StatusCompleted}")
         Else
             _dispatchRepository.UpdateDispatch(order.DispatchId, order.Location, OrderDispatchRepository.StatusFailed)
             _logger?.Log("WARN", "WCS.OrderFailed", $"OrderId={order.OrderId};Reason={ack?.Reason}")
         End If
     End Sub
 
+    Private Async Function sendAckToWms(orderId As String) As Task
+        Try
+            Dim endpoint = $"https://localhost:8443/wms/dispatch/completed/{orderId}"
+            _httpClient = New HttpClient()
+
+
+            Using request As New HttpRequestMessage(HttpMethod.Post, endpoint)
+                request.Content = New StringContent($"order {orderId} completed")
+                request.Headers.TryAddWithoutValidation("Authorization", BasicAuthenticator.BuildHeaderValue(WmsConfig.GetAuthUsername, WmsConfig.GetAuthPassword))
+                _logger?.Info("WCS --- ACK --> WMS")
+                Dim response = Await _httpClient.SendAsync(request).ConfigureAwait(False)
+
+                If Not response.IsSuccessStatusCode Then
+                    _logger?.Log("WARN", "WCS.AckSendFailed", $"StatusCode={response.StatusCode}")
+                End If
+            End Using
+        Catch ex As Exception
+            _logger?.[Error]("WCSC.SendAckToWmsError", ex)
+        End Try
+    End Function
+
     Public Sub Disconnect()
         Try
             _writer?.Dispose()
             _reader?.Dispose()
-            _client?.Close()
+            _tcpClient?.Close()
+            _httpClient?.Dispose()
         Catch
         End Try
         _logger?.Info("WCS.PlcDisconnected")

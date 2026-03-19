@@ -106,7 +106,7 @@ Public Class PlcTcpServer
     Private Sub HandleOrderMessage(line As String, writer As StreamWriter)
         Try
             Dim order = JsonSerializer.Deserialize(Of PlcOrderMessage)(line, JsonOptions)
-            _logger?.Info($"PLC.OrderReceived[OrderId={order?.OrderId};Location={order?.Location}]")
+            _logger?.Info($"PLC has received  [OrderId={order?.OrderId};Location={order?.Location}]")
 
             SimulateMovement()
 
@@ -126,7 +126,7 @@ Public Class PlcTcpServer
                                         .Ok = True
                                     }
         writer.WriteLine(JsonSerializer.Serialize(ack, JsonOptions))
-        _logger?.Info($"PLC.AckSent[OrderId={order?.OrderId}]")
+        _logger?.Info($"PLC has executed [OrderId={order?.OrderId};Location={order?.Location}]")
     End Sub
 
     Public Sub [Stop]()

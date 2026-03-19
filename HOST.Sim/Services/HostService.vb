@@ -28,7 +28,8 @@ Public Class HostService
         _wmsDispatchClient = New WmsDispatchClient(
             WmsConfig.GetDispatchEndpoint(),
             WmsConfig.GetAuthUsername(),
-            WmsConfig.GetAuthPassword())
+            WmsConfig.GetAuthPassword(),
+            _logger)
 
         '-------------------------------------------------------------------------------
         '- Attende che WMS, WCS e PLC siano avviati prima di iniziare a prendere gli ordini da Northwind e mandarli al WMS
@@ -179,8 +180,8 @@ Public Class HostService
                         Dim res = Await client.GetAsync(url)
                         If res.StatusCode = HttpStatusCode.OK Then
                             If url.Contains("wms") Then
-                                _logger?.Log("INFO", "WMS.StartResponse", $"status.ready = {res.StatusCode}")
-                            Else _logger?.Log("INFO", "WCS.StartResponse", $"status.ready = {res.StatusCode}")
+                                _logger?.Log("INFO", "WMS.StartResponse", $"WMS.ready = {res.StatusCode}")
+                            Else _logger?.Log("INFO", "WCS.StartResponse", $"WCS.ready = {res.StatusCode}")
                             End If
                         End If
                         If Not res.IsSuccessStatusCode Then
@@ -207,7 +208,7 @@ Public Class HostService
                             If response Is Nothing OrElse response.Trim().ToUpper() <> "OK" Then
                                 servicesReady = False
                             Else
-                                _logger?.Log("INFO", "PLC.StartResponse", $"response={response}")
+                                _logger?.Log("INFO", "PLC.StartResponse", $"PLC.ready={response}")
                             End If
                         End Using
                     End Using
