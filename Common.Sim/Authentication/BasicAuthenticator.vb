@@ -1,4 +1,5 @@
 ﻿Imports System.Net
+Imports System.Net.Http.Headers
 Imports System.Security.Authentication
 Imports System.Text
 
@@ -19,19 +20,21 @@ Public Class BasicAuthenticator
     '- Valida l'header Authorization della richiesta
     Public Function IsAuthenticated(request As HttpListenerRequest) As Boolean
 
-        Dim authHeader = request.Headers("Authorization")
-        If String.IsNullOrWhiteSpace(authHeader) Then Return False
-        If Not authHeader.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase) Then Return False
+        Dim authHeaderString = request.Headers("Authorization")
+        If String.IsNullOrWhiteSpace(authHeaderString) Then Return False
+
+        ' AuthenticationHeaderValue per validare il formato dell'header e decodificare le credenziali
+        Dim authHeader = AuthenticationHeaderValue.Parse(authHeaderString)
+        If Not authHeaderString.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase) Then Return False
 
         Try
-            Dim encoded = authHeader.Substring("Basic ".Length).Trim()
-            Dim decoded = Encoding.UTF8.GetString(Convert.FromBase64String(encoded))
+            Dim credentialBytes = Convert.FromBase64String(authHeader.Parameter)
+            Dim credentials = Encoding.UTF8.GetString(credentialBytes).Split(":"c)
 
-            Dim separatorIndex = decoded.IndexOf(":"c)
-            If separatorIndex < 0 Then Return False
+            If credentials.Length <> 2 Then Return False
 
-            Dim username = decoded.Substring(0, separatorIndex)
-            Dim password = decoded.Substring(separatorIndex + 1)
+            Dim username = credentials(0)
+            Dim password = credentials(1)
 
             Return String.Equals(username, _username, StringComparison.Ordinal) AndAlso
                      String.Equals(password, _password, StringComparison.Ordinal)
