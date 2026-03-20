@@ -5,7 +5,7 @@ Imports CommonSim
 Public Class OrderPollingService
     Implements IDisposable
 
-    Private ReadOnly _repository As OrdersRepository
+    Private ReadOnly _repository As Object
     Private ReadOnly _interval As TimeSpan
     Private ReadOnly _batchSize As Integer
     Private ReadOnly _onBatch As Action(Of IReadOnlyList(Of OrderRecord))
@@ -13,7 +13,7 @@ Public Class OrderPollingService
     Private _timer As Timer
     Private _status As Integer
 
-    Public Sub New(repository As OrdersRepository,
+    Public Sub New(repository As Object,
                    interval As TimeSpan,
                    batchSize As Integer,
                    onBatch As Action(Of IReadOnlyList(Of OrderRecord)),

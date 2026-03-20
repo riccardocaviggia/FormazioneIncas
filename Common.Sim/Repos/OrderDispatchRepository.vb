@@ -6,6 +6,7 @@ Public Class OrderDispatchRepository
     Public Const StatusPending As String = "PENDING"
     Public Const StatusFailed As String = "FAILED"
     Public Const StatusCompleted As String = "COMPLETED"
+    Public Const StatusArchived As String = "ARCHIVED"
 
     Private ReadOnly _connectionString As String
 
@@ -60,18 +61,46 @@ Public Class OrderDispatchRepository
         Return DbHelper.ExecuteScalar(Of Guid)(_connectionString, insertRejectedSql, parameters)
     End Function
 
-    Public Sub UpdateDispatch(dispatchId As Guid, location As String, status As String)
+    Public Sub UpdateDispatch(orderId As String, location As String, status As String)
         Const sql = "
             UPDATE dbo.OrderDispatches
             SET Location = @Location,
                 Status = @Status,
                 UpdatedAt = GETDATE()
-            WHERE Id = @Id;"
+            WHERE OrderId = @OrderId;"
         Dim parameters = New Dictionary(Of String, Object) From {
-            {"Id", dispatchId},
+            {"OrderId", orderId},
             {"Location", location},
             {"Status", status}
         }
         DbHelper.ExecuteNonQuery(_connectionString, sql, parameters)
     End Sub
+
+    '-------------------------------------------------------------------------------
+    '- Interroga il db per trovare gli ordini che hanno un certo Status
+    Public Function FetchBatchByStatus(batchSize As Integer, status As String) As IReadOnlyList(Of OrderRecord)
+        Const sql = "SELECT TOP (@BatchSize) OrderID, Location, Status FROM dbo.OrderDispatches WHERE Status = @Status ORDER BY UpdatedAt ASC"
+
+        Dim dictParams As New Dictionary(Of String, Object) From {
+            {"BatchSize", batchSize},
+            {"Status", status}
+        }
+
+        Return DbHelper.ExecuteReader(Of OrderRecord)(
+            connectionString:=_connectionString,
+            sql:=sql,
+            parameters:=dictParams,
+            map:=Function(reader)
+                     Dim values As New Dictionary(Of String, Object) From {
+                         {"OrderId", reader("OrderID")},
+                         {"Location", reader("Location")},
+                         {"Status", reader("Status")}
+                     }
+                     Return New OrderRecord(values)
+                 End Function)
+    End Function
+
+    Public Function FetchBatch(batchSize As Integer) As IReadOnlyList(Of OrderRecord)
+        Return FetchBatchByStatus(batchSize, StatusCompleted)
+    End Function
 End Class

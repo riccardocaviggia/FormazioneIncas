@@ -64,7 +64,7 @@ Public Class PlcTcpDeliveryChannel
     End Sub
 
     '-------------------------------------------------------------------------------
-    '- Invia l'ordine al PLC e attende l'ACK. Se arriva l'ACK, aggiorna lo stato dell'ordine
+    '- Invia l'ordine al PLC e attende l'ACK. Invia l'ACK al WMS
     Public Async Function SendAsync(order As DispatchOrderDto, ct As CancellationToken) As Task Implements IOrderDeliveryChannel.SendAsync
         Try
             Dim msg = BuildOrder(order)
@@ -74,12 +74,12 @@ Public Class PlcTcpDeliveryChannel
             '- Attesa ACK con timeout
             Dim ackline = Await WaitForAckAsync(order, ct).ConfigureAwait(False)
             If ackline IsNot Nothing Then
-                ProcessAck(order, ackline)
-                Await sendAckToWms(order.OrderId).ConfigureAwait(False)
+                _logger?.Info("WCS received ACK from PLC")
+                Await sendAckToWmsAsync(order.OrderId, order.Location).ConfigureAwait(False)
             End If
 
         Catch ex As Exception When Not TypeOf ex Is OperationCanceledException
-            _dispatchRepository.UpdateDispatch(order.DispatchId, order.Location, OrderDispatchRepository.StatusFailed)
+            _dispatchRepository.UpdateDispatch(order.OrderId, order.Location, OrderDispatchRepository.StatusFailed)
             _logger?.[Error]("WCS.PlcSendError", ex)
             Throw
         End Try
@@ -105,7 +105,7 @@ Public Class PlcTcpDeliveryChannel
         Dim completed = Await Task.WhenAny(readTask, timeoutTask).ConfigureAwait(False)
 
         If completed Is timeoutTask Then
-            _dispatchRepository.UpdateDispatch(order.DispatchId, order.Location, OrderDispatchRepository.StatusFailed)
+            _dispatchRepository.UpdateDispatch(order.OrderId, order.Location, OrderDispatchRepository.StatusFailed)
             _logger?.Log("WARN", "WCS.PlcAckTimeout", $"OrderId={order.OrderId}")
             Return Nothing
         End If
@@ -117,21 +117,10 @@ Public Class PlcTcpDeliveryChannel
     End Function
 
     '-------------------------------------------------------------------------------
-    '- Deserializza l'ack e aggiorna lo stato dell'ordine
-    Private Sub ProcessAck(order As DispatchOrderDto, ackline As String)
-        Dim ack = JsonSerializer.Deserialize(Of PlcAckMessage)(ackline, JsonOptions)
-        If ack?.Ok Then
-            _dispatchRepository.UpdateDispatch(order.DispatchId, order.Location, OrderDispatchRepository.StatusCompleted)
-            _logger?.Log("INFO", $"WCS updated status [OrderId={order.OrderId}]", $"[OrderId={order.OrderId}]={OrderDispatchRepository.StatusCompleted}")
-        Else
-            _dispatchRepository.UpdateDispatch(order.DispatchId, order.Location, OrderDispatchRepository.StatusFailed)
-            _logger?.Log("WARN", "WCS.OrderFailed", $"OrderId={order.OrderId};Reason={ack?.Reason}")
-        End If
-    End Sub
-
-    Private Async Function sendAckToWms(orderId As String) As Task
+    '- Invia l'ACK al WMS tramite chiamata HTTP POST all'endpoint /dispatch/completed/{orderId}?location={location}
+    Private Async Function sendAckToWmsAsync(orderId As String, location As String) As Task
         Try
-            Dim endpoint = $"https://localhost:8443/wms/dispatch/completed/{orderId}"
+            Dim endpoint = $"https://localhost:8443/wms/dispatch/completed/{orderId}?location={location}"
             _httpClient = New HttpClient()
 
 

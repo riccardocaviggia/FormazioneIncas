@@ -13,6 +13,7 @@ Public Class WmsDispatchServer
     Private ReadOnly _processor As WmsDispatchProcessor
     Private ReadOnly _logger As ServiceLogger
     Private ReadOnly _auth As BasicAuthenticator
+    Private ReadOnly _dispatchRepository As OrderDispatchRepository
 
     Private _listener As HttpListener
     Private _cts As CancellationTokenSource
@@ -102,16 +103,19 @@ Public Class WmsDispatchServer
 
             Dim path = context.Request.Url.AbsolutePath.ToLower()
 
-
+            '- Gestione ACK da WCS: se è una POST a /dispatch/completed/{orderId}, marca l'ordine come completato
             If path.Contains("/dispatch/completed/") AndAlso context.Request.HttpMethod = "POST" Then
                 Dim orderId = path.Substring(path.LastIndexOf("/") + 1)
+                Dim location = context.Request.QueryString("location")
 
                 _logger?.Info("WMS received ACK from WCS")
-
+                _processor.MarkAsCompleted(orderId, location)
+                _logger?.Log("INFO", "WMS.OrderMarkedCompleted", $"OrderId={orderId};Status={OrderDispatchRepository.StatusCompleted}")
                 context.Response.StatusCode = CInt(HttpStatusCode.OK)
                 Return
             End If
 
+            '- Gestione batch di ordini: se è una POST a /dispatch, deserializza il body come DispatchBatchRequest e lo passa al processor,
             If path.EndsWith("/dispatch/") AndAlso context.Request.HttpMethod = "POST" Then
                 Try
                     Dim body As String

@@ -59,7 +59,7 @@ Public Class WmsDispatchProcessor
             End If
 
             If order.DispatchId <> Guid.Empty Then
-                _dispatchRepository.UpdateDispatch(order.DispatchId,
+                _dispatchRepository.UpdateDispatch(order.OrderId,
                                                    order.Location,
                                                    OrderDispatchRepository.StatusInProgress)
             End If
@@ -75,4 +75,10 @@ Public Class WmsDispatchProcessor
             .ThenBy(Function(o) o.OrderId) _
             .ToList()
     End Function
+
+    '-------------------------------------------------------------------------------
+    '- Aggiorna lo stato dell'ordine in COMPLETED
+    Public Sub MarkAsCompleted(orderId As String, location As String)
+        _dispatchRepository.UpdateDispatch(orderId, location, OrderDispatchRepository.StatusCompleted)
+    End Sub
 End Class

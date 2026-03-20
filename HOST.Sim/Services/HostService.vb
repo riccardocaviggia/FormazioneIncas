@@ -12,6 +12,7 @@ Public Class HostService
 
     Private _logger As ServiceLogger
     Private _ordersPoller As OrderPollingService
+    Private _completePoller As OrderPollingService
     Private _ordersRepository As OrdersRepository
     Private _dispatchRepository As OrderDispatchRepository
     Private _wmsDispatchClient As WmsDispatchClient
@@ -48,6 +49,18 @@ Public Class HostService
             AddressOf ForwardOrders,
             _logger)
         _ordersPoller.Start()
+
+        '-------------------------------------------------------------------------------
+        '- POLLER che prende gli ordini COMPLETED da OrderDispatches e li marca come ARCHIVED
+        ' Uso questa modalità di polling perchè l'HOST non ha un server per ricevere l'ACK
+        ' di completamento ordine da WMS.
+        _completePoller = New OrderPollingService(
+            _dispatchRepository,
+            TimeSpan.FromSeconds(5),
+            50,
+            AddressOf OnOrdersCompleted,
+            _logger)
+        _completePoller.Start()
 
         _logger.Info("HOST.OnStart.END")
     End Sub
@@ -156,7 +169,7 @@ Public Class HostService
     Private Sub MarkBatchFailed(batch As IReadOnlyList(Of DispatchOrderDto))
         For Each dto In batch
             Try
-                _dispatchRepository.UpdateDispatch(dto.DispatchId, dto.Location, OrderDispatchRepository.StatusFailed)
+                _dispatchRepository.UpdateDispatch(dto.OrderId, dto.Location, OrderDispatchRepository.StatusFailed)
             Catch ex As Exception
                 _logger?.[Error]("HOST.DispatchMarkFailedError", ex)
             End Try
@@ -220,4 +233,19 @@ Public Class HostService
             If Not servicesReady Then Await Task.Delay(1000)
         End While
     End Function
+
+    Private Sub OnOrdersCompleted(dispatches As IReadOnlyList(Of OrderRecord))
+        For Each dispatch In dispatches
+            Dim orderId = dispatch.GetValue(Of Integer)("OrderId")
+            Dim location = dispatch.GetValue(Of String)("Location")
+
+            Dim orderIdStr = orderId.ToString()
+            Try
+                _dispatchRepository.UpdateDispatch(orderId.ToString(), location, OrderDispatchRepository.StatusArchived)
+                _logger?.Log("INFO", "HOST.OrderCompleted", $"OrderID={orderId};Status={OrderDispatchRepository.StatusArchived}")
+            Catch ex As Exception
+                _logger?.[Error]("HOST.MarkCompleteError", ex)
+            End Try
+        Next
+    End Sub
 End Class

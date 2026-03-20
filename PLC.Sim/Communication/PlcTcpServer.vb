@@ -108,7 +108,7 @@ Public Class PlcTcpServer
             Dim order = JsonSerializer.Deserialize(Of PlcOrderMessage)(line, JsonOptions)
             _logger?.Info($"PLC has received  [OrderId={order?.OrderId};Location={order?.Location}]")
 
-            SimulateMovement()
+            SimulateMovement(order)
 
             SendAck(writer, order)
         Catch ex As Exception
@@ -116,8 +116,9 @@ Public Class PlcTcpServer
         End Try
     End Sub
 
-    Private Sub SimulateMovement()
+    Private Sub SimulateMovement(order As PlcOrderMessage)
         Thread.Sleep(200)
+        _logger?.Info($"PLC has executed [OrderId={order?.OrderId};Location={order?.Location}]")
     End Sub
 
     Private Sub SendAck(writer As StreamWriter, order As PlcOrderMessage)
@@ -126,7 +127,7 @@ Public Class PlcTcpServer
                                         .Ok = True
                                     }
         writer.WriteLine(JsonSerializer.Serialize(ack, JsonOptions))
-        _logger?.Info($"PLC has executed [OrderId={order?.OrderId};Location={order?.Location}]")
+        _logger?.Info("PLC --- ACK --> WCS")
     End Sub
 
     Public Sub [Stop]()

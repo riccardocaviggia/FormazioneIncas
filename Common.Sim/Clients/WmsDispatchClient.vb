@@ -47,6 +47,7 @@ Public Class WmsDispatchClient
             request.Headers.TryAddWithoutValidation("Authorization", _authHeaderValue)
             Dim response = Await Http.SendAsync(request, ct).ConfigureAwait(False)
             response.EnsureSuccessStatusCode()
+
             Return True
         End Using
     End Function
