@@ -1,0 +1,72 @@
+﻿Imports System.Configuration.Install
+Imports System.Reflection
+Imports System.ServiceProcess
+Imports CommonSim
+
+Public Class WcsService
+    Inherits ServiceBase
+
+    Private _logger As ServiceLogger
+    Private _dispatchServer As WcsDispatchServer
+    Private _orderQueue As WcsOrderQueue
+    Private _orderDispatcher As WcsOrderDispatcher
+    Private _deliveryChannel As PlcTcpDeliveryChannel
+
+    Protected Overrides Sub OnStart(ByVal args() As String)
+        Dim connectionString = ConnectionStringProvider.GetConnectionString(args)
+
+        _logger = New ServiceLogger(connectionString, "WCS.Sim", Sub()
+                                                                 End Sub)
+
+        '-------------------------------------------------------------------------------
+        '- Canale TCP verso il PLC (si connette con retry)
+        Dim dispatchRepository = New OrderDispatchRepository(connectionString)
+        _deliveryChannel = New PlcTcpDeliveryChannel(
+            TcpConfig.GetPlcHost(),
+            TcpConfig.GetPlcPort(),
+            dispatchRepository,
+            _logger)
+        _deliveryChannel.Connect()
+
+        '-------------------------------------------------------------------------------
+        '- Consumer: svuota la coda e invia gli ordini al PLC
+        _orderQueue = New WcsOrderQueue()
+        _orderDispatcher = New WcsOrderDispatcher(_orderQueue, _deliveryChannel, _logger)
+        _orderDispatcher.Start()
+
+        '-------------------------------------------------------------------------------
+        '- Avvia il server: riceve i batch dal WMS via HTTPS
+        Dim auth = New BasicAuthenticator(
+            WcsConfig.GetAuthUsername(),
+            WcsConfig.GetAuthPassword())
+
+        _dispatchServer = New WcsDispatchServer(
+            "https://localhost:9443/wcs/",
+            _orderQueue,
+            _logger,
+            auth)
+        _dispatchServer.Start()
+
+        _logger.Info("WCS.Started")
+    End Sub
+
+    Protected Overrides Sub OnStop()
+        Try
+            _dispatchServer?.[Stop]()
+            _dispatchServer = Nothing
+
+            _orderDispatcher?.[Stop]()
+            _orderDispatcher = Nothing
+
+            _orderQueue?.Dispose()
+            _orderQueue = Nothing
+
+            _deliveryChannel?.Disconnect()
+            _deliveryChannel = Nothing
+
+            _logger?.Info("WCS.Stopped")
+        Catch ex As Exception
+            _logger?.[Error]("WCS.OnStop.Error", ex)
+        End Try
+    End Sub
+End Class
