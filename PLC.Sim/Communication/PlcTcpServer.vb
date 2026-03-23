@@ -117,7 +117,7 @@ Public Class PlcTcpServer
     End Sub
 
     Private Sub SimulateMovement(order As PlcOrderMessage)
-        Thread.Sleep(200)
+        Thread.Sleep(5000)
         _logger?.Info($"PLC has executed [OrderId={order?.OrderId};Location={order?.Location}]")
     End Sub
 
