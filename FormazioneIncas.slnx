@@ -23,4 +23,5 @@
   <Project Path="CurrencyConverter_example/CurrencyConverter_example.vbproj" Id="cb612fbc-f4f5-480a-85bf-b2fbfef25c05" />
   <Project Path="MiniCad_example/MiniCad_example.vbproj" Id="7abb0fa1-32eb-437b-be73-74c6adf49437" />
   <Project Path="OOP_example/OOP_example.vbproj" Id="3028c12b-ef38-4e34-9de0-2f7e8e32adcb" />
+  <Project Path="ServiceController/ServiceController.vbproj" Id="cdf52575-0e0b-45ec-bf23-1a11a01482ce" />
 </Solution>
