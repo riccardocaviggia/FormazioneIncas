@@ -43,11 +43,11 @@ Public Class ServiceControllerForm
         })
 
         ' Colonna Azione (Bottone Toggle)
-        Dim actionCol As New DataGridViewButtonColumn()
-        actionCol.Name = "Action"
-        actionCol.HeaderText = "Comando"
-        actionCol.Width = 100
-        actionCol.FlatStyle = FlatStyle.Flat
+        Dim actionCol As New DataGridViewButtonColumn With {
+            .Name = "Action",
+            .HeaderText = "Comando",
+            .Width = 100,
+            .FlatStyle = FlatStyle.Flat}
         dgvServices.Columns.Add(actionCol)
     End Sub
 
