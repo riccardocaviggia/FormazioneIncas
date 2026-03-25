@@ -25,7 +25,9 @@ Partial Class ServiceControllerForm
         Me.components = New System.ComponentModel.Container()
         Me.dgvServices = New System.Windows.Forms.DataGridView()
         Me.TimerRefresh = New System.Windows.Forms.Timer(Me.components)
+        Me.dgvOrdersCounter = New System.Windows.Forms.DataGridView()
         CType(Me.dgvServices, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvOrdersCounter, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'dgvServices
@@ -39,19 +41,30 @@ Partial Class ServiceControllerForm
         'TimerRefresh
         '
         '
-        'Form1
+        'dgvOrdersCounter
+        '
+        Me.dgvOrdersCounter.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvOrdersCounter.Location = New System.Drawing.Point(12, 122)
+        Me.dgvOrdersCounter.Name = "dgvOrdersCounter"
+        Me.dgvOrdersCounter.Size = New System.Drawing.Size(339, 119)
+        Me.dgvOrdersCounter.TabIndex = 1
+        '
+        'ServiceControllerForm
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(371, 152)
+        Me.ClientSize = New System.Drawing.Size(608, 448)
+        Me.Controls.Add(Me.dgvOrdersCounter)
         Me.Controls.Add(Me.dgvServices)
-        Me.Name = "Form1"
+        Me.Name = "ServiceControllerForm"
         Me.Text = "Form1"
         CType(Me.dgvServices, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvOrdersCounter, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
     End Sub
 
     Friend WithEvents dgvServices As DataGridView
     Friend WithEvents TimerRefresh As Timer
+    Friend WithEvents dgvOrdersCounter As DataGridView
 End Class

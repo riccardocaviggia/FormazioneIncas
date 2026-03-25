@@ -35,11 +35,13 @@ Public Class WcsService
         _orderDispatcher.Start()
 
         '-------------------------------------------------------------------------------
-        '- Avvia il server: riceve i batch dal WMS via HTTPS
+        '- Username e Passwword per l'autenticazione del server WCS
         Dim auth = New BasicAuthenticator(
             WcsConfig.GetAuthUsername(),
             WcsConfig.GetAuthPassword())
 
+        '-------------------------------------------------------------------------------
+        '- Avvia il server: riceve i batch dal WMS via HTTPS
         _dispatchServer = New WcsDispatchServer(
             "https://localhost:9443/wcs/",
             _orderQueue,

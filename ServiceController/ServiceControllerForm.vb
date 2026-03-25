@@ -1,6 +1,9 @@
 ﻿Imports System.ServiceProcess
+Imports CommonSim
 
 Public Class ServiceControllerForm
+    Dim _dispatchOrderRepository As OrderDispatchRepository
+
     Private ReadOnly servicesToMonitor As New List(Of ServiceInfo) From {
         New ServiceInfo("WMS.Sim", "Warehouse WMS Service"),
         New ServiceInfo("WCS.Sim", "Warehouse WCS Service"),
@@ -8,16 +11,33 @@ Public Class ServiceControllerForm
         New ServiceInfo("HOST.Sim", "Host Polling Service")
     }
 
+    Private ReadOnly orderStatusToMonitor As New List(Of OrderInfo) From {
+        New OrderInfo("PENDING"),
+        New OrderInfo("IN_PROGRESS"),
+        New OrderInfo("COMPLETED"),
+        New OrderInfo("ARCHIVED")}
+
     Private Sub ServiceControllerForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        SetupDataGridView()
-        PopulateGrid()
+        SetupServiceDataGridView()
+        PopulateServiceGrid()
+
+        SetupOrderCounterDataGridView()
+        PopulateOrderCounterGrid()
+
+        Dim cs As String = ConnectionStringProvider.GetConnectionString(Environment.GetCommandLineArgs)
+
+        If cs Is Nothing Then
+            _dispatchOrderRepository = Nothing
+        Else
+            _dispatchOrderRepository = New OrderDispatchRepository(cs)
+        End If
 
         ' Configura il Timer (frequenza 2 secondi)
         TimerRefresh.Interval = 2000
         TimerRefresh.Start()
     End Sub
 
-    Private Sub SetupDataGridView()
+    Private Sub SetupServiceDataGridView()
         dgvServices.Dock = DockStyle.Fill
         dgvServices.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         dgvServices.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCells
@@ -51,10 +71,40 @@ Public Class ServiceControllerForm
         dgvServices.Columns.Add(actionCol)
     End Sub
 
-    Private Sub PopulateGrid()
+    Private Sub SetupOrderCounterDataGridView()
+        dgvOrdersCounter.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+        dgvOrdersCounter.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells
+        dgvOrdersCounter.AllowUserToAddRows = False
+        dgvOrdersCounter.AllowUserToResizeRows = False
+        dgvOrdersCounter.RowHeadersVisible = False
+        dgvOrdersCounter.ReadOnly = True
+        dgvOrdersCounter.Enabled = True
+        dgvOrdersCounter.SelectionMode = DataGridViewSelectionMode.CellSelect
+        dgvOrdersCounter.MultiSelect = False
+
+        dgvOrdersCounter.DefaultCellStyle.SelectionBackColor = dgvOrdersCounter.DefaultCellStyle.BackColor
+        dgvOrdersCounter.DefaultCellStyle.SelectionForeColor = dgvOrdersCounter.DefaultCellStyle.ForeColor
+
+        dgvOrdersCounter.Columns.Add(New DataGridViewTextBoxColumn With {
+            .Name = "OrderStatus", .HeaderText = "Stato Ordine", .AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+        })
+
+        dgvOrdersCounter.Columns.Add(New DataGridViewTextBoxColumn With {
+            .Name = "Count", .HeaderText = "Contatore", .Width = 100, .AutoSizeMode = DataGridViewAutoSizeColumnMode.None
+        })
+    End Sub
+
+    Private Sub PopulateServiceGrid()
         For Each s In servicesToMonitor
             Dim rowIndex = dgvServices.Rows.Add(s.ServiceName, "In controllo...", "START")
             dgvServices.Rows(rowIndex).Tag = s.ServiceName
+        Next
+    End Sub
+
+    Private Sub PopulateOrderCounterGrid()
+        For Each o In orderStatusToMonitor
+            Dim rowIndex = dgvOrdersCounter.Rows.Add(o.ServiceStatus, 0)
+            dgvOrdersCounter.Rows(rowIndex).Tag = o.ServiceStatus
         Next
     End Sub
 
@@ -63,6 +113,8 @@ Public Class ServiceControllerForm
             Dim serviceName = row.Tag.ToString()
             UpdateRowStatus(row, serviceName)
         Next
+
+        UpdateOrderCounters()
     End Sub
 
     Private Sub UpdateRowStatus(row As DataGridViewRow, serviceName As String)
@@ -92,6 +144,25 @@ Public Class ServiceControllerForm
             row.Cells("Status").Style.ForeColor = Color.Gray
             row.Cells("Action").Value = "---"
         End Try
+    End Sub
+
+    Private Sub UpdateOrderCounters()
+        If _dispatchOrderRepository Is Nothing Then
+            For Each row As DataGridViewRow In dgvOrdersCounter.Rows
+                row.Cells("Count").Value = "-"
+            Next
+            Return
+        End If
+
+        For Each row As DataGridViewRow In dgvOrdersCounter.Rows
+            Dim status = row.Tag.ToString()
+            Try
+                Dim count = _dispatchOrderRepository.CountByStatus(status)
+                row.Cells("Count").Value = count
+            Catch
+                row.Cells("Count").Value = "ERR"
+            End Try
+        Next
     End Sub
 
     Private Sub dgvServices_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvServices.CellContentClick

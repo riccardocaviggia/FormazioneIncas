@@ -15,6 +15,9 @@ Public Class OrderDispatchRepository
         _connectionString = connectionString
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- Inserisce nella tabella OrderDispatches un nuovo record con i dati dell'ordine da processare
+    ' e restituisce l'ID del record inserito
     Public Function InsertDispatch(orderId As Integer,
                                    barcode As String,
                                    contextCode As String,
@@ -39,6 +42,8 @@ Public Class OrderDispatchRepository
         Return DbHelper.ExecuteScalar(Of Guid)(_connectionString, insertDispatchSql, parameters)
     End Function
 
+    '-------------------------------------------------------------------------------
+    ' Inserisce un nuovo record nella tabella RejectedOrders e restituisce l'ID del record inserito
     Public Function InsertRejected(orderId As Integer,
                                    barcode As String,
                                    location As String,
@@ -61,6 +66,8 @@ Public Class OrderDispatchRepository
         Return DbHelper.ExecuteScalar(Of Guid)(_connectionString, insertRejectedSql, parameters)
     End Function
 
+    '-------------------------------------------------------------------------------
+    ' Aggiorna lo stato e la locazione di un record della tabella OrderDispatches
     Public Sub UpdateDispatch(orderId As String, location As String, status As String)
         Const sql = "
             UPDATE dbo.OrderDispatches
@@ -102,5 +109,26 @@ Public Class OrderDispatchRepository
 
     Public Function FetchBatch(batchSize As Integer) As IReadOnlyList(Of OrderRecord)
         Return FetchBatchByStatus(batchSize, StatusCompleted)
+    End Function
+
+    '-------------------------------------------------------------------------------
+    '- Interroga il db per contare quanti ordini hanno un certo Status
+    Public Function CountByStatus(status As String) As Integer
+        Const sql = "SELECT COUNT(*) FROM dbo.OrderDispatches WHERE Status = @Status"
+
+        Dim parameters = New Dictionary(Of String, Object) From {
+            {"Status", status}
+        }
+
+        Try
+            Dim res = DbHelper.ExecuteScalar(Of Object)(_connectionString, sql, parameters)
+            If res Is Nothing Then
+                Return 0
+            End If
+            Return Convert.ToInt32(res)
+        Catch
+            Return 0
+        End Try
+
     End Function
 End Class
