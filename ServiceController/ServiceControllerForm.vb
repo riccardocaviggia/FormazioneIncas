@@ -17,6 +17,8 @@ Public Class ServiceControllerForm
         New OrderInfo("COMPLETED"),
         New OrderInfo("ARCHIVED")}
 
+    '-------------------------------------------------------------------------------
+    '- Inizializzazione Form
     Private Sub ServiceControllerForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         SetupServiceDataGridView()
         PopulateServiceGrid()
@@ -37,6 +39,8 @@ Public Class ServiceControllerForm
         TimerRefresh.Start()
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- Setup griglia dei servizi
     Private Sub SetupServiceDataGridView()
         dgvServices.Dock = DockStyle.Fill
         dgvServices.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
@@ -71,6 +75,8 @@ Public Class ServiceControllerForm
         dgvServices.Columns.Add(actionCol)
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- Setup griglia dei contatori
     Private Sub SetupOrderCounterDataGridView()
         dgvOrdersCounter.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         dgvOrdersCounter.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells
@@ -108,6 +114,8 @@ Public Class ServiceControllerForm
         Next
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- Refresh periodico dello stato dei servizi e dei contatori
     Private Sub TimerRefresh_Tick(sender As Object, e As EventArgs) Handles TimerRefresh.Tick
         For Each row As DataGridViewRow In dgvServices.Rows
             Dim serviceName = row.Tag.ToString()
@@ -117,6 +125,8 @@ Public Class ServiceControllerForm
         UpdateOrderCounters()
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- Aggiorna lo stato di un servizio e la logica del bottone
     Private Sub UpdateRowStatus(row As DataGridViewRow, serviceName As String)
         Try
             Using sc As New ServiceProcess.ServiceController(serviceName)
@@ -146,6 +156,8 @@ Public Class ServiceControllerForm
         End Try
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- Aggiorna i contatori degli ordini per ogni stato
     Private Sub UpdateOrderCounters()
         If _dispatchOrderRepository Is Nothing Then
             For Each row As DataGridViewRow In dgvOrdersCounter.Rows
@@ -165,14 +177,17 @@ Public Class ServiceControllerForm
         Next
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- Gestione Click bottone Start/Stop
     Private Sub dgvServices_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvServices.CellContentClick
-        ' Verifica se è stato cliccato il bottone nella colonna "Action"
         If e.RowIndex >= 0 AndAlso dgvServices.Columns(e.ColumnIndex).Name = "Action" Then
             Dim serviceName = dgvServices.Rows(e.RowIndex).Tag.ToString()
             ToggleService(serviceName)
         End If
     End Sub
 
+    '-------------------------------------------------------------------------------
+    '- Start/Stop del servizio selezionato
     Private Sub ToggleService(serviceName As String)
         Try
             Using sc As New ServiceProcess.ServiceController(serviceName)
