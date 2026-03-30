@@ -3,6 +3,8 @@ Imports System.Net
 Imports System.Web.Services.Protocols
 
 Public Class CalculatorForm
+    '- Il pulsante è asincrono per evitare di bloccare l'interfaccia utente durante l'attesa della risposta del servizio web
+    ' In questo caso non serve a molto ma è una buona pratica per implementazioni complesse
     Private Async Sub Button1_Click(sender As Object, e As EventArgs) Handles btnCalculate.Click
         Dim val1 As Double
         Dim val2 As Double
