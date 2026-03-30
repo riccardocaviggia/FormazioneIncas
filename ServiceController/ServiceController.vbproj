@@ -74,11 +74,17 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="OrderInfo.vb" />
-    <Compile Include="ServiceControllerForm.vb">
+    <Compile Include="Form\PlcMissionForm.Designer.vb">
+      <DependentUpon>PlcMissionForm.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form\PlcMissionForm.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ServiceControllerForm.Designer.vb">
+    <Compile Include="OrderInfo.vb" />
+    <Compile Include="Form\ServiceControllerForm.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\ServiceControllerForm.Designer.vb">
       <DependentUpon>ServiceControllerForm.vb</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
@@ -101,7 +107,10 @@
     <Compile Include="ServiceInfo.vb" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ServiceControllerForm.resx">
+    <EmbeddedResource Include="Form\PlcMissionForm.resx">
+      <DependentUpon>PlcMissionForm.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\ServiceControllerForm.resx">
       <DependentUpon>ServiceControllerForm.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
@@ -129,9 +138,6 @@
       <Name>Common.Sim</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Form\" />
-    <Folder Include="Services\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

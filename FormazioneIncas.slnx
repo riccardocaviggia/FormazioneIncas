@@ -19,6 +19,7 @@
   <Project Path="4_LINQ/4_LINQ.vbproj" Id="52e696de-028c-4ca9-9b95-46efa19b1b51" />
   <Project Path="5_EntityFramework/5_EntityFramework.vbproj" Id="b42350be-fb84-4c0d-b833-dd292fab788b" />
   <Project Path="6_EntityFramework_WinForm/6_EntityFramework_WinForm.vbproj" Id="a6a97ceb-31dc-4454-bde1-b483536cc882" />
+  <Project Path="Calculator.WebService/Calculator.WebService.vbproj" Id="3ce3f67c-35a0-4bde-a6d2-b7ae1c66ab0d" />
   <Project Path="ClassLibrary/ClassLibrary.vbproj" Id="c5864349-32f8-42b2-9a30-89117241f122" />
   <Project Path="CurrencyConverter_example/CurrencyConverter_example.vbproj" Id="cb612fbc-f4f5-480a-85bf-b2fbfef25c05" />
   <Project Path="MiniCad_example/MiniCad_example.vbproj" Id="7abb0fa1-32eb-437b-be73-74c6adf49437" />

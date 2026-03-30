@@ -3,6 +3,7 @@ Imports CommonSim
 
 Public Class ServiceControllerForm
     Dim _dispatchOrderRepository As OrderDispatchRepository
+    Private splitMain As SplitContainer
 
     Private ReadOnly servicesToMonitor As New List(Of ServiceInfo) From {
         New ServiceInfo("WMS.Sim", "Warehouse WMS Service"),
@@ -15,7 +16,8 @@ Public Class ServiceControllerForm
         New OrderInfo("PENDING"),
         New OrderInfo("IN_PROGRESS"),
         New OrderInfo("COMPLETED"),
-        New OrderInfo("ARCHIVED")}
+        New OrderInfo("ARCHIVED"),
+        New OrderInfo("FAILED")}
 
     '-------------------------------------------------------------------------------
     '- Inizializzazione Form
@@ -37,6 +39,7 @@ Public Class ServiceControllerForm
         ' Configura il Timer (frequenza 2 secondi)
         TimerRefresh.Interval = 2000
         TimerRefresh.Start()
+
     End Sub
 
     '-------------------------------------------------------------------------------
@@ -78,6 +81,7 @@ Public Class ServiceControllerForm
     '-------------------------------------------------------------------------------
     '- Setup griglia dei contatori
     Private Sub SetupOrderCounterDataGridView()
+        dgvServices.Dock = DockStyle.Fill
         dgvOrdersCounter.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         dgvOrdersCounter.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells
         dgvOrdersCounter.AllowUserToAddRows = False
@@ -90,6 +94,8 @@ Public Class ServiceControllerForm
 
         dgvOrdersCounter.DefaultCellStyle.SelectionBackColor = dgvOrdersCounter.DefaultCellStyle.BackColor
         dgvOrdersCounter.DefaultCellStyle.SelectionForeColor = dgvOrdersCounter.DefaultCellStyle.ForeColor
+
+        dgvOrdersCounter.ScrollBars = ScrollBars.None
 
         dgvOrdersCounter.Columns.Add(New DataGridViewTextBoxColumn With {
             .Name = "OrderStatus", .HeaderText = "Stato Ordine", .AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
