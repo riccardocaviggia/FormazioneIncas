@@ -100,6 +100,8 @@
       <DependentUpon>Calculator.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="CommaToDotExtensionAttribute.vb" />
+    <Compile Include="CommaToDotSoapExtension.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
